@@ -1,6 +1,6 @@
 from sklearn import metrics
 from sklearn.neighbors import KNeighborsClassifier
-from classifier import TanimotoKNN
+from compchemkit.classifier import TanimotoKNN
 from sklearn.model_selection import GridSearchCV
 import numpy as np
 from typing import *
