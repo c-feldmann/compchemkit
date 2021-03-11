@@ -1,5 +1,6 @@
 from sklearn import metrics
 from sklearn.neighbors import KNeighborsClassifier
+from classifier import TanimotoKNN
 from sklearn.model_selection import GridSearchCV
 import numpy as np
 from typing import *
@@ -47,10 +48,10 @@ def evaluate_dataset(model, dataset: DataSet) -> pd.DataFrame:
     y_pred = model.predict(dataset.feature_matrix)
 
     is_knn = False
-    if isinstance(model, KNeighborsClassifier):
+    if isinstance(model, KNeighborsClassifier) or isinstance(model, TanimotoKNN):
         is_knn = True
     if isinstance(model, GridSearchCV):
-        if isinstance(model.estimator, KNeighborsClassifier):
+        if isinstance(model.estimator, KNeighborsClassifier) or isinstance(model.estimator, TanimotoKNN):
             is_knn = True
 
     if not is_knn:

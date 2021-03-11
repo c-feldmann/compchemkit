@@ -55,16 +55,16 @@ class Fingerprint(metaclass=abc.ABCMeta):
 
 
 class FoldedMorganFingerprint(Fingerprint):
-    def __init__(self, n_bits=2048, diameter: int = 2, use_features=False):
+    def __init__(self, n_bits=2048, radius: int = 2, use_features=False):
         super().__init__()
         if isinstance(n_bits, int) and n_bits >= 0:
             self._n_bits = n_bits
         else:
             raise ValueError(f"Number of bits has to be a positive integer! (Received: {n_bits})")
-        if isinstance(diameter, int) and diameter >= 0:
-            self._diameter = diameter
+        if isinstance(radius, int) and radius >= 0:
+            self._radius = radius
         else:
-            raise ValueError(f"Number of bits has to be a positive integer! (Received: {diameter})")
+            raise ValueError(f"Number of bits has to be a positive integer! (Received: {radius})")
 
         self._use_features = use_features
 
@@ -73,8 +73,8 @@ class FoldedMorganFingerprint(Fingerprint):
         return self._n_bits
 
     @property
-    def diameter(self):
-        return self._diameter
+    def radius(self):
+        return self._radius
 
     def fit(self, mol_obj_list: List[Chem.Mol]) -> None:
         pass
@@ -82,7 +82,7 @@ class FoldedMorganFingerprint(Fingerprint):
     def transform(self, mol_obj_list: List[Chem.Mol]) -> sparse.csr_matrix:
         fingerprints = []
         for mol in mol_obj_list:
-            fp = AllChem.GetMorganFingerprintAsBitVect(mol, self.diameter, useFeatures=self._use_features,
+            fp = AllChem.GetMorganFingerprintAsBitVect(mol, self.radius, useFeatures=self._use_features,
                                                        nBits=self._n_bits)
             fingerprints.append(sparse.csr_matrix(fp))
         return sparse.vstack(fingerprints)

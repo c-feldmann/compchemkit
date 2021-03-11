@@ -3,8 +3,8 @@ import unittest
 import numpy as np
 import scipy.sparse as sparse
 
-from compchemkit.ml_utilities.fingerprints import UnfoldedMorganFingerprint
-from compchemkit.ml_utilities.kernel import TanimotoKernel
+from compchemkit.sampling.fingerprints import UnfoldedMorganFingerprint
+from compchemkit.sampling.kernel import TanimotoKernel
 from compchemkit.supporting_functions import construct_check_mol_list
 
 # noinspection SpellCheckingInspection
