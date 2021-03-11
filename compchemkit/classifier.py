@@ -1,5 +1,5 @@
 import numpy as np
-from kernel import TanimotoKernel
+from compchemkit.kernel import TanimotoKernel
 
 
 class TanimotoKNN:
