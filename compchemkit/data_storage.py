@@ -1,48 +1,44 @@
-import numpy as np
-from typing import *
-from scipy import sparse
+from __future__ import annotations
+from typing import Any, Dict, List, Optional, Union, Set
 
-FeatureMatrix = Union[np.ndarray, sparse.csr.csr_matrix]
+import numpy as np
+import numpy.typing as npt
+
+from compchemkit.ccktypes import FeatureMatrix
 
 
 class DataSet:
-    """ Object to contain paired data such das features and label. Supports adding other attributes such as groups.
-    """
-    def __init__(self, label: np.ndarray, feature_matrix: FeatureMatrix):
+    """Object to contain paired data such das features and label. Supports adding other attributes such as groups."""
 
-        if not isinstance(label, np.ndarray):
-            label = np.array(label).reshape(-1)
-
-        if label.shape[0] != feature_matrix.shape[0]:
-            raise IndexError
-
-        self.label = label
+    def __init__(
+        self,
+        feature_matrix: FeatureMatrix,
+        label: Optional[Union[npt.NDArray[np.int_], npt.NDArray[np.float_]]] = None,
+    ):
         self.feature_matrix = feature_matrix
-        self._additional_attributes = set()
+        self._additional_attributes: Set[str] = set()
+        if label is not None:
+            self.add_attribute("label", label)
 
-    def add_attribute(self, attribute_name, attribute_values: np.ndarray):
-        if not isinstance(attribute_values, np.ndarray):
-            attribute_values = np.array(attribute_values).reshape(-1)
-
-        if attribute_values.shape[0] != self.label.shape[0]:
+    def add_attribute(self, attribute_name: str, attribute_values: npt.NDArray[Any]) -> None:
+        if attribute_values.shape[0] != self.feature_matrix.shape[0]:
             raise IndexError("Size does not match!")
-
         self._additional_attributes.add(attribute_name)
-        self.__dict__[attribute_name] = attribute_values
+        setattr(self, attribute_name, attribute_values)
 
     @property
-    def columns(self) -> dict:
-        r_dict = {k: v for k, v in self.__dict__.items() if k in self._additional_attributes}
-        r_dict["label"] = self.label
-        r_dict["feature_matrix"] = self.feature_matrix
-        return r_dict
+    def columns(self) -> List[str]:
+        return sorted(self._additional_attributes | {"feature_matrix"})
 
-    def __getitem__(self, idx) -> Union[dict, 'DataSet']:
+    @property
+    def attribute_dict(self) -> Dict[str, Any]:
+        return {col: getattr(self, col) for col in self.columns}
+
+    def __getitem__(self, idx: Union[slice, npt.NDArray[np.int_]]) -> Union[Dict[str, Any], DataSet]:
         if isinstance(idx, int):
-            return {col: values[idx] for col, values in self.columns.items()}
+            return {col: self.__dict__[col] for col in self.columns}
 
-        data_slice = DataSet(self.label[idx], self.feature_matrix[idx])
+        data_slice = DataSet(self.feature_matrix[idx])
         for additional_attribute in self._additional_attributes:
-            data_slice.add_attribute(additional_attribute, self.__dict__[additional_attribute][idx])
-
+            data_slice.add_attribute(additional_attribute, getattr(self, additional_attribute)[idx])
         return data_slice
