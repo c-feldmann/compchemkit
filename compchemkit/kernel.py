@@ -3,7 +3,9 @@ import numpy.typing as npt
 import scipy.sparse as sparse
 
 
-def similarity_from_dense(matrix_a: npt.NDArray[np.int_], matrix_b: npt.NDArray[np.int_]) -> npt.NDArray[np.float_]:
+def similarity_from_dense(
+    matrix_a: npt.NDArray[np.int_], matrix_b: npt.NDArray[np.int_]
+) -> npt.NDArray[np.float_]:
     intersection = matrix_a.dot(matrix_b.transpose())
     norm_1 = np.multiply(matrix_a, matrix_a).sum(axis=1)
     norm_2 = np.multiply(matrix_b, matrix_b).sum(axis=1)

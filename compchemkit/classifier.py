@@ -37,7 +37,9 @@ class TanimotoKNN:
             predicted.append(label[np.argmax(label_occ)])
         return np.array(predicted)
 
-    def fit_predict(self, feature_matrix: sparse.csr_matrix, y: npt.NDArray[np.int_]) -> npt.NDArray[np.int_]:
+    def fit_predict(
+        self, feature_matrix: sparse.csr_matrix, y: npt.NDArray[np.int_]
+    ) -> npt.NDArray[np.int_]:
         self.fit(feature_matrix, y)
         return self.predict(feature_matrix)
 

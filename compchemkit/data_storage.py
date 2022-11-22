@@ -34,7 +34,9 @@ class DataSet:
     def attribute_dict(self) -> Dict[str, Any]:
         return {col: getattr(self, col) for col in self.columns}
 
-    def __getitem__(self, idx: Union[slice, npt.NDArray[np.int_]]) -> Union[Dict[str, Any], DataSet]:
+    def __getitem__(
+        self, idx: Union[slice, npt.NDArray[np.int_]]
+    ) -> Union[Dict[str, Any], DataSet]:
         if isinstance(idx, int):
             return {col: self.__dict__[col] for col in self.columns}
 

@@ -10,7 +10,7 @@ def undersample_dataset(
     column: str = "label",
     ratios: Optional[Dict[Any, float]] = None,
     seed: Optional[int] = None,
-    only_index: bool = False
+    only_index: bool = False,
 ) -> Union[DataSet, npt.NDArray[np.int_]]:
     unique_groups, count = np.unique(dataset.attribute_dict[column], return_counts=True)
     group_count = dict(zip(unique_groups, count))
@@ -46,10 +46,10 @@ def undersample_dataset(
 
 def oversample_dataset(
     dataset: DataSet,
-        column: str = "label",
-        ratios: Optional[Dict[Any, float]] = None,
-        seed: Optional[int] = None,
-        only_index: bool = False
+    column: str = "label",
+    ratios: Optional[Dict[Any, float]] = None,
+    seed: Optional[int] = None,
+    only_index: bool = False,
 ) -> Union[DataSet, npt.NDArray[np.int_]]:
 
     unique_groups, count = np.unique(dataset.attribute_dict[column], return_counts=True)
@@ -83,6 +83,7 @@ def oversample_dataset(
     if only_index:
         return sampled_index_array
     else:
-        if isinstance(dataset, Dict):
+        r_dataset = dataset[sampled_index_array]
+        if isinstance(r_dataset, Dict):
             raise TypeError
-        return dataset[sampled_index_array]
+        return r_dataset

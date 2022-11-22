@@ -1,13 +1,13 @@
 from __future__ import annotations
 import abc
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 from collections import defaultdict
 
 import numpy as np
-import rdkit.Chem as Chem
-import rdkit.Chem.AllChem as AllChem
-import rdkit.Chem.FilterCatalog as FilterCatalog
-import scipy.sparse as sparse
+from rdkit import Chem
+from rdkit.Chem import AllChem
+from rdkit.Chem import FilterCatalog
+from scipy import sparse
 from bidict import bidict
 
 from compchemkit.supporting_functions import construct_check_mol_list
@@ -164,7 +164,7 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
         Weak-point: features not seen in the fit method are not mappable to the bit-vector and therefore cause an error.
 
     References:
-            [1] http://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
+            [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
     """
 
     def __init__(

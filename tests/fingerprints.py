@@ -3,8 +3,8 @@ import unittest
 import numpy as np
 import scipy.sparse as sparse
 
-from compchemkit.sampling.fingerprints import UnfoldedMorganFingerprint
-from compchemkit.sampling.kernel import TanimotoKernel
+from compchemkit.fingerprints import UnfoldedMorganFingerprint
+from compchemkit.kernel import similarity_from_dense, similarity_from_sparse
 from compchemkit.supporting_functions import construct_check_mol_list
 
 # noinspection SpellCheckingInspection
@@ -48,7 +48,7 @@ class Kernel(unittest.TestCase):
         self.assertTrue(
             np.all(
                 np.isclose(
-                    TanimotoKernel.similarity_from_sparse(test_fingerprint1, test_fingerprint2),
+                    similarity_from_sparse(test_fingerprint1, test_fingerprint2),
                     expected_matrix,
                 )
             )
@@ -69,7 +69,7 @@ class Kernel(unittest.TestCase):
         self.assertTrue(
             np.all(
                 np.isclose(
-                    TanimotoKernel.similarity_from_dense(test_fingerprint1, test_fingerprint2),
+                    similarity_from_dense(test_fingerprint1, test_fingerprint2),
                     expected_matrix,
                 )
             )
@@ -79,7 +79,7 @@ class Kernel(unittest.TestCase):
         mol_obj_list = construct_check_mol_list(smiles_list)
         ecfp2_1 = UnfoldedMorganFingerprint()
         fp1 = ecfp2_1.fit_transform(mol_obj_list)
-        sim_matrix = TanimotoKernel.similarity_from_sparse(fp1, fp1)
+        sim_matrix = similarity_from_sparse(fp1, fp1)
         self.assertEqual(sim_matrix.shape[0], sim_matrix.shape[1])
         self.assertEqual(sim_matrix.shape[0], len(mol_obj_list))
         self.assertTrue(np.all(np.isclose(sim_matrix.diagonal(), np.ones((len(mol_obj_list), 1)))))
