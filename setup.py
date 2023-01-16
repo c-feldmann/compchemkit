@@ -10,6 +10,7 @@ setup(
     ],
     author_email="cfeldmann@bit.uni-bonn.de",
     description="Classes and functions useful for chemoinformatics",
+    python_requires=">=3.8",
     install_requires=[
         "scipy",
         "bidict",
