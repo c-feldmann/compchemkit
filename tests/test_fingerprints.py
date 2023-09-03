@@ -27,7 +27,7 @@ class ConstructingFingerprints(unittest.TestCase):
         ecfp2_2 = UnfoldedMorganFingerprint()
         ecfp2_2.fit(mol_obj_list)
         fp2 = ecfp2_2.transform(mol_obj_list)
-        self.assertTrue((fp1 != fp2).nnz == 0)
+        self.assertEqual((fp1 != fp2).nnz, 0)
 
     def test_independence_of_constructing_parallel(self) -> None:
         mol_obj_list = construct_check_mol_list(smiles_list)
