@@ -2,6 +2,7 @@ bidict
 matplotlib
 numpy
 pandas
+Pillow
 rdkit
 scikit-learn
 scipy
