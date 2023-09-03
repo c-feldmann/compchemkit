@@ -1,4 +1,3 @@
-bidict
 matplotlib
 numpy
 pandas
