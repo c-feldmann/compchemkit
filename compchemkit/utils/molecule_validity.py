@@ -1,9 +1,8 @@
-from typing import *
-
+from typing import Iterable
 import rdkit.Chem as Chem
 
 
-def construct_check_mol_list(smiles_list: List[str]) -> List[Chem.Mol]:
+def construct_check_mol_list(smiles_list: Iterable[str]) -> list[Chem.Mol]:
     mol_obj_list = [Chem.MolFromSmiles(smiles) for smiles in smiles_list]
     if None in mol_obj_list:
         invalid_smiles_list = []
