@@ -3,11 +3,14 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
+dynamic = ["dependencies"]
 name = "compchemkit"
 authors = [
     {name = "Christian W. Feldmann", email = "christian.w.feldmann@gmail.com"},
 ]
 description = "Classes and functions useful for chemoinformatics"
 version = "0.1.1"
-dependencies = {file = "requirements.txt"}
 license = {text = "BSD"}
+
+[tool.setuptools.dynamic]
+dependencies = {file = "requirements.txt"}
