@@ -1,0 +1,8 @@
+bidict
+matplotlib
+numpy
+pandas
+rdkit
+scikit-learn
+scipy
+seaborn
