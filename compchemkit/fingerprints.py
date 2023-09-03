@@ -1,6 +1,6 @@
 from __future__ import annotations
 import abc
-from typing import Iterable, Optional, Set, Tuple
+from typing import Iterable, Optional, Set, Self
 from collections import defaultdict
 from multiprocessing import Pool
 
@@ -33,24 +33,60 @@ class CircularAtomEnvironment(AtomEnvironment):
 class Fingerprint(abc.ABC):
     """A metaclass representing all fingerprint subclasses."""
     n_jobs: int
+    _n_bits: int
 
     def __init__(self, n_jobs: int) -> None:
         self.n_jobs = n_jobs
 
     @property
-    @abc.abstractmethod
     def n_bits(self) -> int:
-        raise NotImplementedError
+        """Return number of bits, which is the length of the feature vector."""
+        return self._n_bits
 
     @abc.abstractmethod
-    def fit(self, mol_obj_list: list[Chem.Mol]) -> None:
-        raise NotImplementedError
+    def fit(self, mol_obj_list: list[Chem.Mol]) -> Self:
+        """Fit fingerprint generator to input.
 
-    @abc.abstractmethod
+        Parameters
+        ----------
+        mol_obj_list: Iterable[Chem.Mol]
+            A collection of molecules.
+
+        Returns
+        -------
+        Self
+            Fitted fingerprint generator.
+        """
+
     def fit_transform(self, mol_obj_list: list[Chem.Mol]) -> sparse.csr_matrix:
-        raise NotImplementedError
+        """Fit Fingerprint and transform the input.
+
+        Parameters
+        ----------
+        mol_obj_list: list[Chem.Mol]
+            List of molecules to which the object is fitted.
+
+        Returns
+        -------
+        sparse.csr_matrix
+            Fingerprint for molecules.
+        """
+        self.fit(mol_obj_list)
+        return self.transform(mol_obj_list)
 
     def transform(self, mol_obj_list: Iterable[Chem.Mol]) -> sparse.csr_matrix:
+        """Transform iterable of RDKit Molecules to fingerprint.
+
+        Parameters
+        ----------
+        mol_obj_list: Iterable[Chem.Mol]
+            Iterable of molecules to transform.
+
+        Returns
+        -------
+        sparse.csr_matrix
+            Fingerprint as sparse matrix.
+        """
         if self.n_jobs == 1:
             bit_dict_list = (self._transform_mol(mol) for mol in mol_obj_list)
             return generate_matrix_from_item_list(bit_dict_list, self.n_bits)
@@ -75,27 +111,61 @@ class Fingerprint(abc.ABC):
             Value: item value
         """
 
-    def fit_smiles(self, smiles_list: list[str]) -> Fingerprint:
+    def fit_smiles(self, smiles_list: list[str]) -> Self:
+        """Create a list of RDKit molecules from SMILES list and apply .fit method.
+
+        Parameters
+        ----------
+        smiles_list: Iterable[str]
+            List of SMILES strings.
+
+        Returns
+        -------
+        Self
+            Fitted object.
+        """
         mol_obj_list = construct_check_mol_list(smiles_list)
         self.fit(mol_obj_list)
         return self
 
     def fit_transform_smiles(self, smiles_list: list[str]) -> sparse.csr_matrix:
+        """Create a list of RDKit molecules from SMILES list and apply .fit_transform method.
+
+        Parameters
+        ----------
+        smiles_list: Iterable[str]
+            List of SMILES strings.
+
+        Returns
+        -------
+        sparse.csr_matrix
+            Fingerprint as sparse matrix.
+        """
         mol_obj_list = construct_check_mol_list(smiles_list)
         return self.fit_transform(mol_obj_list)
 
-    def transform_smiles(self, smiles_list: list[str]) -> sparse.csr_matrix:
+    def transform_smiles(self, smiles_list: Iterable[str]) -> sparse.csr_matrix:
+        """Create a list of RDKit molecules from SMILES list and apply .transform method.
+
+        Parameters
+        ----------
+        smiles_list: Iterable[str]
+            List of SMILES strings.
+
+        Returns
+        -------
+        sparse.csr_matrix
+            Fingerprint as sparse matrix.
+        """
         mol_obj_list = construct_check_mol_list(smiles_list)
         return self.transform(mol_obj_list)
 
 
 class _MorganFingerprint(Fingerprint):
-    _n_bits: Optional[int]
     _radius: int
 
     def __init__(self, radius: int = 2, use_features: bool = False, n_jobs=1):
         super().__init__(n_jobs=n_jobs)
-        self._n_bits = None
         self._use_features = use_features
         if isinstance(radius, int) and radius >= 0:
             self._radius = radius
@@ -105,20 +175,17 @@ class _MorganFingerprint(Fingerprint):
             )
 
     def __len__(self) -> int:
+        """Return length of the feature vector."""
         return self.n_bits
 
     @property
-    def n_bits(self) -> int:
-        if self._n_bits is None:
-            raise ValueError("Number of bits is undetermined!")
-        return self._n_bits
-
-    @property
     def radius(self) -> int:
+        """Return size of radius used to derive features."""
         return self._radius
 
     @property
     def use_features(self) -> bool:
+        """Return if atoms are represented as feature."""
         return self._use_features
 
     @abc.abstractmethod
@@ -141,6 +208,22 @@ class _MorganFingerprint(Fingerprint):
     def bit2atom_mapping(
         self, mol_obj: Chem.Mol
     ) -> dict[int, list[CircularAtomEnvironment]]:
+        """Map list of matching CircularAtomEnvironment to each bit.
+
+        Bits may occure multiple times, and hence each item in the list represents one occurrence.
+        Items are AtomEnvironment objects containing indices of corresponding atoms.
+
+        Parameters
+        ----------
+        mol_obj: Chem.Mol
+            Molecule to explain.
+
+        Returns
+        -------
+        dict[int, list[CircularAtomEnvironment]]
+            Key: bit-position
+            Value: list of encoded CircularAtomEnvironment for the bit.
+        """
         bit2atom_dict = self.explain_rdmol(mol_obj)
         result_dict = defaultdict(list)
 
@@ -167,6 +250,23 @@ class _MorganFingerprint(Fingerprint):
 
 class FoldedMorganFingerprint(_MorganFingerprint):
     def __init__(self, n_bits: int = 2048, radius: int = 2, use_features: bool = False, n_jobs: int = 1):
+        """Initialize fingerprint generation method for folded morgan fingerprint.
+
+        Parameters
+        ----------
+        n_bits: int
+            Size of returned bit-vector.
+        radius: int
+            Maximum radius of derived circular features.
+        use_features: bool
+            Encode Atoms based on their features.
+        n_jobs:
+            Number of cores to use.
+
+        Returns
+        -------
+        None
+        """
         super().__init__(radius=radius, use_features=use_features, n_jobs=n_jobs)
         if isinstance(n_bits, int) and n_bits >= 0:
             self._n_bits = n_bits
@@ -175,8 +275,22 @@ class FoldedMorganFingerprint(_MorganFingerprint):
                 f"Number of bits has to be a positive integer! (Received: {n_bits})"
             )
 
-    def fit(self, mol_obj_list: list[Chem.Mol]) -> None:
-        pass
+    def fit(self, mol_obj_list: list[Chem.Mol]) -> Self:
+        """Fit fingerprint generator to input.
+
+        Does nothing.
+
+        Parameters
+        ----------
+        mol_obj_list: Iterable[Chem.Mol]
+            A collection of molecules.
+
+        Returns
+        -------
+        Self
+            Fitted fingerprint generator.
+        """
+        return self
 
     def _transform_mol(self, mol: Chem.Mol) -> dict[int, int]:
         fp = AllChem.GetMorganFingerprintAsBitVect(
@@ -184,11 +298,22 @@ class FoldedMorganFingerprint(_MorganFingerprint):
         )
         return {bit: 1 for bit in fp.GetOnBits()}
 
-    def fit_transform(self, mol_obj_list: list[Chem.Mol]) -> sparse.csr_matrix:
-        return self.transform(mol_obj_list)
+    def explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
+        """Return a dictionary where of features and corresponding environments, listing central atom and radius.
 
-    def explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[Tuple[int, int]]]:
-        bi: dict[int, list[Tuple[int, int]]] = {}
+        Parameters
+        ----------
+        mol_obj: Chem.Mol
+            RDKit molecule which is explained.
+
+        Returns
+        -------
+        dict[int, list[tuple[int, int]]]
+            Key: feature position
+            Value: list of matching environments.
+                Matching environments are given as tuple of central atom id and radius.
+        """
+        bi: dict[int, list[tuple[int, int]]] = {}
         _ = AllChem.GetMorganFingerprintAsBitVect(
             mol_obj,
             self.radius,
@@ -260,13 +385,33 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
 
     @property
     def bit_mapping(self) -> dict[int, int]:
+        """Return copy of dict used for mapping feature hash to bit position.
+
+        Raises
+        ------
+        AttributeError
+            When object is not fitted
+        """
         if self._bit_mapping is None:
             raise AttributeError("Attribute not set. Please call fit first.")
-        return self._bit_mapping.copy()
+        return self._bit_mapping
 
-    def fit(self, mol_obj_list: list[Chem.Mol]) -> None:
+    def fit(self, mol_obj_list: list[Chem.Mol]) -> Self:
+        """Fit fingerprint generator to input.
+
+        Parameters
+        ----------
+        mol_obj_list: Iterable[Chem.Mol]
+            A collection of molecules.
+
+        Returns
+        -------
+        Self
+            Fitted fingerprint generator.
+        """
         mol_iterator = (self._gen_features(mol_obj) for mol_obj in mol_obj_list)
         self._create_mapping(mol_iterator)
+        return self
 
     def _gen_features(self, mol_obj: Chem.Mol) -> dict[int, int]:
         """Return a dict, where the key is the feature-hash and the value is the count."""
@@ -275,6 +420,20 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
         ).GetNonzeroElements())
 
     def explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
+        """Return a dictionary where of features and corresponding environments, listing central atom and radius.
+
+        Parameters
+        ----------
+        mol_obj: Chem.Mol
+            RDKit molecule which is explained.
+
+        Returns
+        -------
+        dict[int, list[tuple[int, int]]]
+            Key: feature position
+            Value: list of matching environments.
+                Matching environments are given as tuple of central atom id and radius.
+        """
         bi: dict[int, list[tuple[int, int]]] = dict()
         _ = AllChem.GetMorganFingerprint(
             mol_obj, self.radius, useFeatures=self.use_features, bitInfo=bi
@@ -282,57 +441,39 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
         bit_info = {self.bit_mapping[k]: v for k, v in bi.items()}
         return bit_info
 
-    def explain_smiles(self, smiles: str) -> dict[int, list[tuple[int, int]]]:
-        return self.explain_rdmol(Chem.MolFromSmiles(smiles))
-
     def fit_transform(self, mol_obj_list: list[Chem.Mol]) -> sparse.csr_matrix:
+        """Fit Fingerprint and transform the input.
+
+        Parameters
+        ----------
+        mol_obj_list: list[Chem.Mol]
+            List of molecules to which the object is fitted.
+
+        Returns
+        -------
+        sparse.csr_matrix
+            Fingerprint for molecules.
+        """
         mol_fp_list = [self._gen_features(mol_obj) for mol_obj in mol_obj_list]
         self._create_mapping(mol_fp_list)
-        return self._transform(mol_fp_list)
+        new_fp_list = [self._map_features_dict(f_dict) for f_dict in mol_fp_list]
+        return generate_matrix_from_item_list(new_fp_list, self.n_bits)
 
     def _transform_mol(self, mol: Chem.Mol) -> dict[int, int]:
         feature_dict = self._gen_features(mol)
-        feature_list, count_list = zip(*feature_dict.items())
-        bit_list = self._map_features(feature_list)  # type: ignore
-        bit_dict: dict[int, int]
-        if not self._counted:
-            count_list = [1] * len(count_list)  # type: ignore
-        bit_dict = dict(zip(bit_list, count_list))
-        return bit_dict
+        return self._map_features_dict(feature_dict)  # type: ignore
 
-    def _map_features(self, feature_hash_list: list[int]) -> list[int]:
-        if self.ignore_unknown:
-            feature_pos_list = [
-                self.bit_mapping[f] for f in feature_hash_list if f in self.bit_mapping
-            ]
-        else:
-            feature_pos_list = [self.bit_mapping[f] for f in feature_hash_list]
-        return feature_pos_list
-
-    def _transform(
-        self,
-        mol_fp_list: Iterable[dict[int, int]],
-    ) -> sparse.csr_matrix:
-        data: list[int] = []
-        rows: list[int] = []
-        cols: list[int] = []
-        n_col = 0
-        if self._counted:
-            for i, mol_fp in enumerate(mol_fp_list):  # type: int, dict[int, int]
-                features = list(mol_fp.keys())
-                counts = [mol_fp[f] for f in features]
-                data.extend(counts)
-                rows.extend(self._map_features(features))
-                cols.append(i)
-                n_col += 1
-        else:
-            for i, mol_fp in enumerate(mol_fp_list):
-                data.extend([1] * len(mol_fp))
-                feature_hash_list = list(mol_fp.keys())
-                rows.extend(self._map_features(feature_hash_list))
-                cols.extend([i] * len(mol_fp))
-                n_col += 1
-        return sparse.csr_matrix((data, (cols, rows)), shape=(n_col, self.n_bits))
+    def _map_features_dict(self, feature_hash_dict: dict[int, int]) -> dict[int, int]:
+        unknown_features = set(feature_hash_dict.keys()) - set(self.bit_mapping.keys())
+        if unknown_features:
+            if self.ignore_unknown:
+                for unknown_feature in unknown_features:
+                    feature_hash_dict.pop(unknown_feature)
+            else:
+                raise ValueError(f"Unknown feature hashs: {unknown_features}")
+        if self.counted:
+            return {self.bit_mapping[f]: c for f, c in feature_hash_dict.items()}
+        return {self.bit_mapping[f]: 1 for f, c in feature_hash_dict.items()}
 
     def _create_mapping(self, molecule_features: Iterable[dict[int, int]]) -> None:
         unraveled_features = [f for f_list in molecule_features for f in f_list.keys()]
@@ -348,32 +489,77 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
 
 class MACCS(Fingerprint):
     def __init__(self, n_jobs: int = 1) -> None:
+        """Initialize MACCS Key fingerprint generator.
+
+        Parameters
+        ----------
+        n_jobs: number of cores to use.
+
+        Returns
+        -------
+        None
+        """
         super().__init__(n_jobs=n_jobs)
+        self._n_bits = 166
 
-    @property
-    def n_bits(self) -> int:
-        return 166
+    def fit(self, mol_obj_list: Iterable[Chem.Mol]) -> Self:
+        """Fit fingerprint generator to input.
 
-    def fit(self, mol_obj_list: list[Chem.Mol]) -> None:
-        pass
+        Does nothing as this class requires no fitting.
 
-    def fit_transform(self, mol_obj_list: list[Chem.Mol]) -> sparse.csr_matrix:
-        return self.transform(mol_obj_list)
+        Parameters
+        ----------
+        mol_obj_list: Iterable[Chem.Mol]
+            A collection of molecules.
+
+        Returns
+        -------
+        Self
+            Fitted fingerprint generator.
+        """
+        return self
 
     def _transform_mol(self, mol: Chem.Mol) -> dict[int, int]:
         maccs_fp = AllChem.GetMACCSKeysFingerprint(mol)
         return {bit: 1 for bit in maccs_fp.GetOnBits()}
 
     def transform(self, mol_obj_list: Iterable[Chem.Mol]) -> sparse.csr_matrix:
+        """Transform iterable of RDKit Molecules to MACCs key fingerprint.
+
+        Parameters
+        ----------
+        mol_obj_list: Iterable[Chem.Mol]
+            Iterable of molecules to transform.
+
+        Returns
+        -------
+        sparse.csr_matrix
+            Fingerprint as sparse matrix.
+        """
         r_matrix = super().transform(mol_obj_list)
+        # Remove first colum as this is always zero
         # https://github.com/rdkit/rdkit/blob/b208da471f8edc88e07c77ed7d7868649ac75100/Code/GraphMol/Fingerprints/MACCS.h#L17
-        assert r_matrix[:, 0].sum() == 0
+        if r_matrix[:, 0].sum() != 0:
+            raise AssertionError("First colum should always be zero. Please file a bug report!")
         return r_matrix[:, 1:]
 
 
 class FragmentFingerprint(Fingerprint):
-    def __init__(self, substructure_list: list[str], n_jobs: int = 1):
-        super().__init__(n_jobs=1)
+    def __init__(self, substructure_list: list[str], n_jobs: int = 1) -> None:
+        """Fingerprint from a list of substructures.
+
+        Parameters
+        ----------
+        substructure_list: list[str]
+            List of SMARTS representations.
+        n_jobs: int
+            Number of core to use.
+
+        Returns
+        -------
+        None
+        """
+        super().__init__(n_jobs=n_jobs)
         self._substructure_list = substructure_list
         self._substructure_obj_list = []
 
@@ -391,21 +577,44 @@ class FragmentFingerprint(Fingerprint):
             pattern = FilterCatalog.SmartsMatcher(f"Pattern {i}", substructure, 1)
             self._filter.AddEntry(FilterCatalog.FilterCatalogEntry(str(i), pattern))
 
-    @property
-    def n_bits(self) -> int:
-        return self._n_bits
-
     def _transform_mol(self, mol_obj: Chem.Mol) -> dict[int, int]:
         feature_dict = {int(match.GetDescription()): 1 for match in self._filter.GetMatches(mol_obj)}
         return feature_dict
 
-    def fit(self, mol_obj_list: list[Chem.Mol]) -> None:
-        pass
+    def fit(self, mol_obj_list: list[Chem.Mol]) -> Self:
+        """Fit generator to the input.
 
-    def fit_transform(self, mol_obj_list: list[Chem.Mol]) -> sparse.csr_matrix:
-        return self.transform(mol_obj_list)
+        Does nothing.
+
+        Parameters
+        ----------
+        mol_obj_list: list[Chem.Mol]
+            List of molecules to which the object is fitted
+
+        Returns
+        -------
+        Self:
+            Fitted generator
+        """
+        return self
 
     def bit2atom_mapping(self, mol_obj: Chem.Mol) -> dict[int, list[AtomEnvironment]]:
+        """Map list of matching AtomEnvironments to each bit.
+
+        Bits may occure multiple times, and hence each item in the list represents one occurrence.
+        Items are AtomEnvironment objects containing indices of corresponding atoms.
+
+        Parameters
+        ----------
+        mol_obj: Chem.Mol
+            Molecule to explain.
+
+        Returns
+        -------
+        dict[int, list[AtomEnvironment]]
+            Key: bit-position
+            Value: list of encoded AtomsEnvironments for the bit.
+        """
         present_bits = self._transform_mol(mol_obj)
         bit2atom_dict = defaultdict(list)
         for bit in present_bits:
@@ -417,29 +626,3 @@ class FragmentFingerprint(Fingerprint):
 
         # Transforming defaultdict to dict
         return {k: v for k, v in bit2atom_dict.items()}
-
-
-if __name__ == "__main__":
-    # noinspection SpellCheckingInspection
-    test_smiles_list = [
-        "c1ccccc1",
-        "CC(=O)C1CCC2C1(CCC3C2CCC4=CC(=O)CCC34C)C",
-        "c1cc(ccc1C2CCNCC2COc3ccc4c(c3)OCO4)F",
-        "c1c(c2c(ncnc2n1C3C(C(C(O3)CO)O)O)N)C(=O)N",
-        "Cc1cccc(c1NC(=O)c2cnc(s2)Nc3cc(nc(n3)C)N4CCN(CC4)CCO)Cl",
-        "CN(C)c1c2c(ncn1)n(cn2)C3C(C(C(O3)CO)NC(=O)C(Cc4ccc(cc4)OC)N)O",
-        "CC12CCC(CC1CCC3C2CC(C4(C3(CCC4C5=CC(=O)OC5)O)C)O)O",
-    ]
-    test_mol_obj_list = construct_check_mol_list(test_smiles_list)
-
-    ecfp2_1 = UnfoldedMorganFingerprint()
-    fp1 = ecfp2_1.fit_transform(test_mol_obj_list)
-    print(fp1.shape)
-
-    ecfp2_folded = FoldedMorganFingerprint()
-    fp2 = ecfp2_folded.fit_transform(test_mol_obj_list)
-    print(fp2.shape)
-
-    maccs = MACCS()
-    maccs_fp = maccs.fit_transform(test_mol_obj_list)
-    print(maccs_fp.shape)

@@ -6,7 +6,7 @@ import pandas as pd
 import scipy.sparse as sparse
 
 from compchemkit.fingerprints import UnfoldedMorganFingerprint
-from compchemkit.kernel import similarity_from_dense, similarity_from_sparse
+from compchemkit.kernel import similarity_from_dense, tanimoto_from_sparse
 from compchemkit.utils.molecule_validity import construct_check_mol_list
 
 
@@ -35,7 +35,7 @@ class Kernel(unittest.TestCase):
         self.assertTrue(
             np.all(
                 np.isclose(
-                    similarity_from_sparse(test_fingerprint1, test_fingerprint2),
+                    tanimoto_from_sparse(test_fingerprint1, test_fingerprint2),
                     expected_matrix,
                 )
             )
@@ -66,7 +66,7 @@ class Kernel(unittest.TestCase):
         mol_obj_list = construct_check_mol_list(smiles_list)
         ecfp2_1 = UnfoldedMorganFingerprint()
         fp1 = ecfp2_1.fit_transform(mol_obj_list)
-        sim_matrix = similarity_from_sparse(fp1, fp1)
+        sim_matrix = tanimoto_from_sparse(fp1, fp1)
         self.assertEqual(sim_matrix.shape[0], sim_matrix.shape[1])
         self.assertEqual(sim_matrix.shape[0], len(mol_obj_list))
         self.assertTrue(
