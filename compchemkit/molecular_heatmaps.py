@@ -9,14 +9,16 @@ from PIL import Image
 from typing import Dict, Sequence, List, Optional, Union, Tuple
 from compchemkit.fingerprints import AtomEnvironment
 from compchemkit.fingerprints import _MorganFingerprint
-from compchemkit.ccktypes import RNGATuple
+from compchemkit.utils.custom_types import RNGATuple
 
 
 def shap2atomweight(
     mol: Chem.Mol, fingerprint: _MorganFingerprint, shap_mat: npt.NDArray[np.float_]
-) -> List[float]:
-    bit_atom_env_dict: Dict[int, Sequence[AtomEnvironment]]
-    bit_atom_env_dict = dict(fingerprint.bit2atom_mapping(mol))  # MyPy invariants make me do this.
+) -> list[float]:
+    bit_atom_env_dict: dict[int, Sequence[AtomEnvironment]]
+    bit_atom_env_dict = dict(
+        fingerprint.bit2atom_mapping(mol)
+    )  # MyPy invariants make me do this.
     atom_weight_dict = assign_prediction_importance(bit_atom_env_dict, shap_mat)
     atom_weight_list = [
         atom_weight_dict[a_idx] if a_idx in atom_weight_dict else 0
@@ -91,7 +93,8 @@ def get_similaritymap_from_weights(
             sigma = (
                 sigma_f
                 * (
-                    mol.GetConformer().GetAtomPosition(0) - mol.GetConformer().GetAtomPosition(1)
+                    mol.GetConformer().GetAtomPosition(0)
+                    - mol.GetConformer().GetAtomPosition(1)
                 ).Length()
             )
         sigma = round(sigma, 2)
@@ -136,7 +139,12 @@ def rdkit_gaussplot(
     cps.setColourMap(color_tuple)
 
     d = get_similaritymap_from_weights(
-        mol, weights, contour_lines=n_contour_lines, draw2d=d, contour_params=cps, sigma_f=0.4
+        mol,
+        weights,
+        contour_lines=n_contour_lines,
+        draw2d=d,
+        contour_params=cps,
+        sigma_f=0.4,
     )
     d.FinishDrawing()
     return d

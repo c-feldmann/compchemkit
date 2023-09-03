@@ -44,7 +44,9 @@ class PainsFilter:
                 elif n_cores <= available_cpus:
                     self._n_cores = n_cores
                 else:
-                    print(f"More cores than available requested! Falling back to {available_cpus}")
+                    print(
+                        f"More cores than available requested! Falling back to {available_cpus}"
+                    )
                     self._n_cores = available_cpus
 
             except NotImplementedError:

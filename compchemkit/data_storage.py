@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Union, Set
 import numpy as np
 import numpy.typing as npt
 
-from compchemkit.ccktypes import FeatureMatrix
+from compchemkit.utils.custom_types import FeatureMatrix
 
 
 class DataSet:
@@ -20,7 +20,9 @@ class DataSet:
         if label is not None:
             self.add_attribute("label", label)
 
-    def add_attribute(self, attribute_name: str, attribute_values: npt.NDArray[Any]) -> None:
+    def add_attribute(
+        self, attribute_name: str, attribute_values: npt.NDArray[Any]
+    ) -> None:
         if attribute_values.shape[0] != self.feature_matrix.shape[0]:
             raise IndexError("Size does not match!")
         self._additional_attributes.add(attribute_name)
@@ -42,5 +44,7 @@ class DataSet:
 
         data_slice = DataSet(self.feature_matrix[idx])
         for additional_attribute in self._additional_attributes:
-            data_slice.add_attribute(additional_attribute, getattr(self, additional_attribute)[idx])
+            data_slice.add_attribute(
+                additional_attribute, getattr(self, additional_attribute)[idx]
+            )
         return data_slice

@@ -61,7 +61,9 @@ def evaluate_regression(
         "max_error": metrics.max_error(y_true, y_predicted),
         "mean_absolute_error": metrics.mean_absolute_error(y_true, y_predicted),
         "mean_squared_error": metrics.mean_squared_error(y_true, y_predicted),
-        "root_mean_squared_error": metrics.mean_squared_error(y_true, y_predicted, squared=False),
+        "root_mean_squared_error": metrics.mean_squared_error(
+            y_true, y_predicted, squared=False
+        ),
         "mean_squared_log_error": metrics.mean_squared_log_error(y_true, y_predicted),
         "median_absolute_error": metrics.median_absolute_error(y_true, y_predicted),
         "r2": metrics.r2_score(y_true, y_predicted),
@@ -88,7 +90,6 @@ def visualize_metrics(
     hue_order: Optional[List[str]] = None,
     dpi: int = 300,
 ) -> Tuple[plt.Figure, Tuple[plt.Axes, plt.Axes, plt.Axes]]:
-
     if not metric_list:
         metric_list = ["MCC", "F1", "BA", "AUC"]
 
@@ -97,9 +98,13 @@ def visualize_metrics(
     zero2one_scores = [metric for metric in metric_list if metric in zero2one_scores]
 
     minus_one2one_scores = ["MCC"]
-    minus_one2one_scores = [metric for metric in metric_list if metric in minus_one2one_scores]
+    minus_one2one_scores = [
+        metric for metric in metric_list if metric in minus_one2one_scores
+    ]
 
-    unknown_metrics = set(metric_list) - set(zero2one_scores) - set(minus_one2one_scores)
+    unknown_metrics = (
+        set(metric_list) - set(zero2one_scores) - set(minus_one2one_scores)
+    )
     if unknown_metrics:
         raise ValueError("Unknown metric(s): {}".format(", ".join(unknown_metrics)))
 
@@ -122,7 +127,7 @@ def visualize_metrics(
         vis = sns.boxplot
         kwargs = {}
 
-    left_plot = vis(
+    _ = vis(
         data=dataframe.query("metric.isin(@zero2one_scores)"),
         x="metric",
         y="value",
@@ -132,7 +137,7 @@ def visualize_metrics(
         ax=ax1,
         **kwargs
     )
-    right_plot = vis(
+    _ = vis(
         data=dataframe.query("metric.isin(@minus_one2one_scores)"),
         x="metric",
         y="value",
