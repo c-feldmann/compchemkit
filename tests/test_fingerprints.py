@@ -21,6 +21,12 @@ smiles_list = smiles_df["SMILES"].to_list()
 
 class ConstructingFingerprints(unittest.TestCase):
     def test_independence_of_constructing(self) -> None:
+        """Test if fit and transform give same results as fit_transform.
+
+        Returns
+        -------
+        None
+        """
         mol_obj_list = construct_check_mol_list(smiles_list)
         ecfp2_1 = UnfoldedMorganFingerprint()
         fp1 = ecfp2_1.fit_transform(mol_obj_list)
@@ -30,6 +36,12 @@ class ConstructingFingerprints(unittest.TestCase):
         self.assertEqual((fp1 != fp2).nnz, 0)
 
     def test_independence_of_constructing_parallel(self) -> None:
+        """Test if fit and transform give same results as fit_transform with parallel usage.
+
+        Returns
+        -------
+        None
+        """
         mol_obj_list = construct_check_mol_list(smiles_list)
         # Fingerprint 1
         ecfp2_1 = UnfoldedMorganFingerprint(n_jobs=2)
@@ -46,9 +58,17 @@ class ConstructingFingerprints(unittest.TestCase):
         self.assertEqual((fp1 != fp3).nnz, 0)
 
     def test_substructure_fp(self) -> None:
+        """Test if FragmentFingerprint gives same result as manual substructure search.
+
+        Returns
+        -------
+        None
+        """
         smarts_list = ["[#6]", "[#7]", "[#8]"]
         frag_fingerprint = FragmentFingerprint(smarts_list)
         fp = frag_fingerprint.transform(construct_check_mol_list(smiles_list))
+
+        # Looped search
         expected_fp: npt.NDArray[np.int_] = np.zeros(
             (len(smiles_list), len(smarts_list)), dtype=int
         )

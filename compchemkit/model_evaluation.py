@@ -15,6 +15,25 @@ def evaluate_classification(
     y_score: npt.NDArray[np.float_] | None = None,
     nan2zero: bool = False,
 ) -> dict[str, float]:
+    """Calculate available metrics for classification.
+
+    Parameters
+    ----------
+    y_true: npt.NDArray[np.int_]
+        Array of true class labels.
+    y_predicted: npt.NDArray[np.int_]
+        Array of predicted class labels.
+    y_score: Optional[npt.NDArray[np.float_]]
+        Array of class labels scores (e.g. probability).
+    nan2zero: bool
+        Map invalid metric calculations to zero.
+
+    Returns
+    -------
+    dict[str, float]
+        Keys: Metric name
+        Values: Metric value
+    """
     if len(y_true) != len(y_predicted):
         raise IndexError("y_true and y_predicted are not of equal size!")
     if y_score is not None:
@@ -55,6 +74,20 @@ def evaluate_classification(
 def evaluate_regression(
     y_true: npt.NDArray[np.float_], y_predicted: npt.NDArray[np.float_]
 ) -> dict[str, float]:
+    """Calculate available metrics for regression.
+
+    Parameters
+    ----------
+    y_true: npt.NDArray[np.float_]
+        Array of true values.
+    y_predicted: npt.NDArray[np.float_]
+        Array of predicted values.
+    Returns
+    -------
+    dict[str, float]
+        Keys: Metric name
+        Values: Metric value
+    """
     if len(y_true) != len(y_predicted):
         raise IndexError("y_true and y_predicted are not of equal size!")
 
@@ -91,7 +124,34 @@ def visualize_metrics(
     swarm: bool = False,
     hue_order: list[str] | None = None,
     dpi: int = 300,
-) -> tuple[Figure, tuple[Axes, Axes, Axes]]:
+) -> tuple[plt.Figure, tuple[plt.Axes, plt.Axes, plt.Axes]]:
+    """Visualize metrics as boxplot.
+
+    Parameters
+    ----------
+    dataframe: pd.DataFrame
+        Recorded performances.
+    save_path: Optional[str], optional
+        Location for saving the figure. If None, figure is not saved.
+    metric_list: Optional[list[str]], optional
+        Plots only these metrics.
+    figsize: tuple[int, int], optional
+        Size in inches of figure.
+    show: bool, optional
+        If only saving the figure is of relevance, displaying the figure can be omitted.
+    hue: str, optional
+        hue for Boxplots
+    swarm: bool, optional
+        Show as swarmplot, else boxplot.
+    hue_order: Optional[list[str]], optional,
+        Order of hue.
+    dpi: int, optional
+        Resolution.
+    Returns
+    -------
+    tuple[plt.Figure, tuple[plt.Axes, plt.Axes, plt.Axes]]
+        Figure and axes.
+    """
     if not metric_list:
         metric_list = ["MCC", "F1", "BA", "AUC"]
 

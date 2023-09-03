@@ -6,7 +6,7 @@ from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit import Geometry
 from PIL import Image as image
-from typing import Dict, Sequence, List, Optional, Union, Tuple
+from typing import Sequence, Optional, Union
 from compchemkit.fingerprints import AtomEnvironment
 from compchemkit.fingerprints import _MorganFingerprint
 from compchemkit.utils.custom_types import RNGATuple
@@ -28,9 +28,9 @@ def shap2atomweight(
 
 
 def assign_prediction_importance(
-    bit_dict: Dict[int, Sequence[AtomEnvironment]], weights: npt.NDArray[np.float_]
-) -> Dict[int, float]:
-    atom_contribution: Dict[int, float] = defaultdict(lambda: 0)
+    bit_dict: dict[int, Sequence[AtomEnvironment]], weights: npt.NDArray[np.float_]
+) -> dict[int, float]:
+    atom_contribution: dict[int, float] = defaultdict(lambda: 0)
     for bit, atom_env_list in bit_dict.items():  # type: int, Sequence[AtomEnvironment]
         n_machtes = len(atom_env_list)
         for atom_set in atom_env_list:
@@ -47,7 +47,7 @@ def assign_prediction_importance(
 
 def get_similaritymap_from_weights(
     mol: Chem.Mol,
-    weights: Union[npt.NDArray[np.float_], List[float], Tuple[float]],
+    weights: Union[npt.NDArray[np.float_], list[float], tuple[float]],
     draw2d: Draw.MolDraw2DCairo,
     sigma: Optional[float] = None,
     sigma_f: float = 0.3,
@@ -55,22 +55,30 @@ def get_similaritymap_from_weights(
     contour_params: Optional[Draw.ContourParams] = None,
 ) -> Draw.MolDraw2D:
     """Generates the similarity map for a molecule given the atomic weights.
-     Stolen... uhm... copied from Chem.Draw.SimilarityMaps
+
+    Stolen... uhm... copied from Chem.Draw.SimilarityMaps
 
     Parameters
     ----------
     mol: Chem.Mol
-        the molecule of interest.
-    weights: Union[npt.NDArray[np.float_], List[float], Tuple[float]]
+        The molecule of interest.
+    weights: Union[npt.NDArray[np.float_], list[float], tuple[float]]
+        Weight of each atom.
     draw2d: Draw.MolDraw2DCairo
+        Canvas to draw onto.
     sigma: Optional[float]
+        Width of Gauss function.
     sigma_f: float
-    contour_lines: int
+        Scaling factor. I think.
+    contour_lines: int:
+        Number of contour lines.
     contour_params: Optional[Draw.ContourParams]
+        Additional contour parameters.
 
     Returns
     -------
     Draw.MolDraw2D
+        RDKit Drawing of molecule with heatmap.
     """
     if mol.GetNumAtoms() < 2:
         raise ValueError("too few atoms")
@@ -122,7 +130,7 @@ def rdkit_gaussplot(
     mol: Chem.Mol,
     weights: npt.NDArray[np.float_],
     n_contour_lines: int = 5,
-    color_tuple: Optional[Tuple[RNGATuple, RNGATuple, RNGATuple]] = None,
+    color_tuple: Optional[tuple[RNGATuple, RNGATuple, RNGATuple]] = None,
 ) -> Draw.MolDraw2D:
     d = Draw.MolDraw2DCairo(600, 600)
     # Coloring atoms of element 0 to 100 black
