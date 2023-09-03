@@ -22,10 +22,13 @@ def undersample_dataset(
     if not ratios:
         ratios = {group_l: 1 for group_l in unique_groups}
 
-    group_count_scaled = {group: group_count[group] / ratios[group] for group in unique_groups}
+    group_count_scaled = {
+        group: group_count[group] / ratios[group] for group in unique_groups
+    }
     limiting_group_count = min([gcs for gcs in group_count_scaled.values()])
     group_sample_size = {
-        group: int(np.floor(ratios[group] * limiting_group_count)) for group in unique_groups
+        group: int(np.floor(ratios[group] * limiting_group_count))
+        for group in unique_groups
     }
 
     random_gen = default_rng(seed)
@@ -51,7 +54,6 @@ def oversample_dataset(
     seed: Optional[int] = None,
     only_index: bool = False,
 ) -> Union[DataSet, npt.NDArray[np.int_]]:
-
     unique_groups, count = np.unique(dataset.attribute_dict[column], return_counts=True)
     group_count = dict(zip(unique_groups, count))
 
@@ -62,10 +64,13 @@ def oversample_dataset(
     if not ratios:
         ratios = {group_l: 1 for group_l in unique_groups}
 
-    group_count_scaled = {group: group_count[group] / ratios[group] for group in unique_groups}
+    group_count_scaled = {
+        group: group_count[group] / ratios[group] for group in unique_groups
+    }
     required_group_count = max([gcs for gcs in group_count_scaled.values()])
     group_sample_size = {
-        group: int(np.floor(ratios[group] * required_group_count)) for group in unique_groups
+        group: int(np.floor(ratios[group] * required_group_count))
+        for group in unique_groups
     }
 
     random_gen = default_rng(seed)
