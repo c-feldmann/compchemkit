@@ -17,7 +17,9 @@ class TanimotoKNN:
         self._params = dict()
         self._params["n_neighbors"] = n_neighbors
 
-    def fit(self, feature_matrix: sparse.csr_matrix, y: npt.NDArray[np.int_]) -> TanimotoKNN:
+    def fit(
+        self, feature_matrix: sparse.csr_matrix, y: npt.NDArray[np.int_]
+    ) -> TanimotoKNN:
         if feature_matrix.shape[0] != y.shape[0]:
             raise IndexError("Not same shape")
         self._training_feature_mat = feature_matrix
