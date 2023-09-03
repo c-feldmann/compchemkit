@@ -1,24 +1,28 @@
-from typing import List, Optional
+from typing import Iterable, Optional
 
 import rdkit.Chem as Chem
 from rdkit.Chem import FilterCatalog
 import multiprocessing
 
+from compchemkit.utils.parallel import check_adapt_n_jobs
+
 
 class PainsFilter:
-    def __init__(self, n_cores: int = -1):
+    _n_jobs: int
+
+    def __init__(self, n_jobs: int = -1):
         params = FilterCatalog.FilterCatalogParams()
         params.AddCatalog(FilterCatalog.FilterCatalogParams.FilterCatalogs.PAINS)
         self.filter: FilterCatalog = FilterCatalog.FilterCatalog(params)
-        self.n_cores: int = n_cores
+        self.n_jobs = n_jobs
 
     @property
-    def n_cores(self) -> int:
+    def n_jobs(self) -> int:
         """Returns the number of cores used during filtering."""
-        return self._n_cores
+        return self._n_jobs
 
-    @n_cores.setter
-    def n_cores(self, n_cores: int) -> None:
+    @n_jobs.setter
+    def n_jobs(self, n_cores: int) -> None:
         """Sets the number of cores used during filtering.
 
         Parameters
@@ -30,39 +34,46 @@ class PainsFilter:
         -------
         None
         """
-        if not isinstance(n_cores, int):
-            raise TypeError(f"n_cores must be an int. Received: {type(n_cores)}")
-
-        if n_cores == 1:
-            self._n_cores = n_cores
-        else:
-            try:
-                available_cpus = multiprocessing.cpu_count()
-
-                if n_cores == -1:
-                    self._n_cores = available_cpus
-                elif n_cores <= available_cpus:
-                    self._n_cores = n_cores
-                else:
-                    print(
-                        f"More cores than available requested! Falling back to {available_cpus}"
-                    )
-                    self._n_cores = available_cpus
-
-            except NotImplementedError:
-                print("multiprocessing not supported. Falling back to single process!")
-                self._n_cores = 1  # fall_back solution
+        self._n_jobs = check_adapt_n_jobs(n_cores)
 
     def check_smiles(self, smiles: str) -> Optional[bool]:
+        """Check a smiles if they match any PAINS filter.
+
+        Parameters
+        ----------
+        smiles: str
+            SMILES representations of molecule.
+
+        Returns
+        -------
+        Optional[bool]
+            True: Contains PAINS substructure
+            False: No PAINS substructure detected
+            None: Invalid molecule.
+        """
         mol = Chem.MolFromSmiles(smiles)
         if mol is None:
             return None
         else:
-            return self.filter.HasMatch(mol)
+            return bool(self.filter.HasMatch(mol))
 
-    def check_smiles_list(self, smiles_list: List[str]) -> List[Optional[bool]]:
-        if self.n_cores == 1:
+    def check_smiles_list(self, smiles_list: Iterable[str]) -> list[Optional[bool]]:
+        """Check a list of smiles if they match any PAINS filter.
+
+        Parameters
+        ----------
+        smiles_list: Iterable[str]
+            Iterable of SMILES representations.
+
+        Returns
+        -------
+        list[Optional[bool]]
+            True: Contains PAINS substructure
+            False: No PAINS substructure detected
+            None: Invalid molecule.
+        """
+        if self._n_jobs == 1:
             return [self.check_smiles(smi) for smi in smiles_list]
         else:
-            pool = multiprocessing.Pool(processes=self.n_cores)
+            pool = multiprocessing.Pool(processes=self.n_jobs)
             return list(pool.map(self.check_smiles, smiles_list))
