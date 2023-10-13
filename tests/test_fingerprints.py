@@ -49,7 +49,9 @@ class ConstructingFingerprints(unittest.TestCase):
         smarts_list = ["[#6]", "[#7]", "[#8]"]
         frag_fingerprint = FragmentFingerprint(smarts_list)
         fp = frag_fingerprint.transform(construct_check_mol_list(smiles_list))
-        expected_fp: npt.NDArray[np.int_] = np.zeros((len(smiles_list), len(smarts_list)), dtype=int)
+        expected_fp: npt.NDArray[np.int_] = np.zeros(
+            (len(smiles_list), len(smarts_list)), dtype=int
+        )
         for i, smart in enumerate(smarts_list):
             smart_obj = Chem.MolFromSmarts(smart)
             for j, smi in enumerate(smiles_list):

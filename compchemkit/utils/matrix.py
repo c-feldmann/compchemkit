@@ -2,7 +2,9 @@ from typing import Iterable
 from scipy.sparse import csr_matrix
 
 
-def generate_matrix_from_item_list(item_list: Iterable[dict[int, int]], n_cols: int) -> csr_matrix:
+def generate_matrix_from_item_list(
+    item_list: Iterable[dict[int, int]], n_cols: int
+) -> csr_matrix:
     """Transform an iterable of dicts to a sparse matrix.
 
     Each dict encodes a row: Key: position, Value: value
