@@ -15,7 +15,7 @@ def undersample_dataset(
     unique_groups, count = np.unique(dataset.attribute_dict[column], return_counts=True)
     group_count = dict(zip(unique_groups, count))
 
-    group_indices = dict()
+    group_indices = {}
     for group in unique_groups:
         group_indices[group] = np.where(dataset.attribute_dict[column] == group)[0]
 
