@@ -1,9 +1,10 @@
+"""Test functionality of kernels."""
 import os
 import unittest
 
 import numpy as np
 import pandas as pd
-import scipy.sparse as sparse
+from scipy import sparse
 
 from compchemkit.fingerprints import UnfoldedMorganFingerprint
 from compchemkit.kernel import similarity_from_dense, tanimoto_from_sparse
@@ -16,7 +17,10 @@ smiles_list = smiles_df["SMILES"].to_list()
 
 
 class Kernel(unittest.TestCase):
+    """Test functionality of Tanimoto kernel."""
+
     def test_sparse_kernel_simple_vectors(self) -> None:
+        """Test the taninmoto kernel for sparse input with visually easy to verify vectors."""
         test_fingerprint1 = sparse.csr_matrix(
             np.array([[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 0, 0]])
         )
@@ -42,6 +46,7 @@ class Kernel(unittest.TestCase):
         )
 
     def test_dense_kernel_simple_vectors(self) -> None:
+        """Test calculation of Tanimoto Matrix from dense matrix using dummy values."""
         test_fingerprint1 = np.array([[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 0, 0]])
         test_fingerprint2 = np.array(
             [
@@ -63,6 +68,7 @@ class Kernel(unittest.TestCase):
         )
 
     def test_real_fp_as_input(self) -> None:
+        """Test calculation of Tanimoto similarity for real molecules."""
         mol_obj_list = construct_check_mol_list(smiles_list)
         ecfp2_1 = UnfoldedMorganFingerprint()
         fp1 = ecfp2_1.fit_transform(mol_obj_list)
