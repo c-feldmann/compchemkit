@@ -1,18 +1,20 @@
-from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 import numpy.typing as npt
 from sklearn import metrics
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import seaborn as sns
 
 
 def evaluate_classification(
     y_true: npt.NDArray[np.int_],
     y_predicted: npt.NDArray[np.int_],
-    y_score: Optional[npt.NDArray[np.float_]] = None,
+    y_score: npt.NDArray[np.float_] | None = None,
     nan2zero: bool = False,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     if len(y_true) != len(y_predicted):
         raise IndexError("y_true and y_predicted are not of equal size!")
     if y_score is not None:
@@ -52,7 +54,7 @@ def evaluate_classification(
 
 def evaluate_regression(
     y_true: npt.NDArray[np.float_], y_predicted: npt.NDArray[np.float_]
-) -> Dict[str, float]:
+) -> dict[str, float]:
     if len(y_true) != len(y_predicted):
         raise IndexError("y_true and y_predicted are not of equal size!")
 
@@ -81,15 +83,15 @@ def evaluate_regression(
 
 def visualize_metrics(
     dataframe: pd.DataFrame,
-    save_path: Optional[str] = None,
-    metric_list: Optional[List[str]] = None,
-    figsize: Tuple[int, int] = (8, 6),
+    save_path: str | None = None,
+    metric_list: list[str] | None = None,
+    figsize: tuple[int, int] = (8, 6),
     show: bool = True,
     hue: str = "algorithm",
     swarm: bool = False,
-    hue_order: Optional[List[str]] = None,
+    hue_order: list[str] | None = None,
     dpi: int = 300,
-) -> Tuple[plt.Figure, Tuple[plt.Axes, plt.Axes, plt.Axes]]:
+) -> tuple[Figure, tuple[Axes, Axes, Axes]]:
     if not metric_list:
         metric_list = ["MCC", "F1", "BA", "AUC"]
 
