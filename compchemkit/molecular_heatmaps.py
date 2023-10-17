@@ -5,7 +5,7 @@ import io
 from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit import Geometry
-from PIL import Image
+from PIL import Image as image
 from typing import Dict, Sequence, List, Optional, Union, Tuple
 from compchemkit.fingerprints import AtomEnvironment
 from compchemkit.fingerprints import _MorganFingerprint
@@ -150,7 +150,19 @@ def rdkit_gaussplot(
     return d
 
 
-def show_png(data: bytes) -> Image:
+def show_png(data: bytes) -> image.Image:
+    """Transform bytes to Image.
+
+    Parameters
+    ----------
+    data: bytes
+        Image bytes.
+
+    Returns
+    -------
+    image.Image
+        An PIL.Image.Image object.
+    """
     bio = io.BytesIO(data)
-    img = Image.open(bio)
+    img = image.open(bio)
     return img
