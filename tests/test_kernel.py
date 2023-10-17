@@ -47,7 +47,13 @@ class Kernel(unittest.TestCase):
 
     def test_dense_kernel_simple_vectors(self) -> None:
         """Test calculation of Tanimoto Matrix from dense matrix using dummy values."""
-        test_fingerprint1 = np.array([[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 0, 0]])
+        test_fingerprint1 = np.array(
+            [
+                [0, 0, 0, 1],
+                [0, 0, 1, 1],
+                [0, 1, 0, 0],
+            ]
+        )
         test_fingerprint2 = np.array(
             [
                 [0, 0, 0, 1],
