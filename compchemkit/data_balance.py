@@ -1,17 +1,17 @@
+from typing import Any
 import numpy as np
 import numpy.typing as npt
-from .data_storage import DataSet
-from typing import Any, Dict, List, Optional, Set, Union
 from numpy.random import default_rng
 
+from compchemkit.data_storage import DataSet
 
 def undersample_dataset(
     dataset: DataSet,
     column: str = "label",
-    ratios: Optional[Dict[Any, float]] = None,
-    seed: Optional[int] = None,
+    ratios: dict[Any, float] | None = None,
+    seed: int | None = None,
     only_index: bool = False,
-) -> Union[DataSet, npt.NDArray[np.int_]]:
+) -> DataSet | npt.NDArray[np.int_]:
     unique_groups, count = np.unique(dataset.attribute_dict[column], return_counts=True)
     group_count = dict(zip(unique_groups, count))
 
@@ -25,14 +25,14 @@ def undersample_dataset(
     group_count_scaled = {
         group: group_count[group] / ratios[group] for group in unique_groups
     }
-    limiting_group_count = min([gcs for gcs in group_count_scaled.values()])
+    limiting_group_count = min(gcs for gcs in group_count_scaled.values())
     group_sample_size = {
         group: int(np.floor(ratios[group] * limiting_group_count))
         for group in unique_groups
     }
 
     random_gen = default_rng(seed)
-    sampled_indices: Set[int] = set()
+    sampled_indices: set[int] = set()
     for group in unique_groups:
         n_sample = group_sample_size[group]
         index_pool = group_indices[group]
@@ -40,20 +40,19 @@ def undersample_dataset(
     sampled_indice_array = np.array(sorted(sampled_indices))
     if only_index:
         return sampled_indice_array
-    else:
-        r_dataset = dataset[sampled_indice_array]
-        if isinstance(r_dataset, Dict):
-            raise TypeError
-        return r_dataset
+    r_dataset = dataset[sampled_indice_array]
+    if isinstance(r_dataset, dict):
+        raise TypeError
+    return r_dataset
 
 
 def oversample_dataset(
     dataset: DataSet,
     column: str = "label",
-    ratios: Optional[Dict[Any, float]] = None,
-    seed: Optional[int] = None,
+    ratios: dict[Any, float] | None = None,
+    seed: int | None = None,
     only_index: bool = False,
-) -> Union[DataSet, npt.NDArray[np.int_]]:
+) -> DataSet | npt.NDArray[np.int_]:
     unique_groups, count = np.unique(dataset.attribute_dict[column], return_counts=True)
     group_count = dict(zip(unique_groups, count))
 
@@ -74,7 +73,7 @@ def oversample_dataset(
     }
 
     random_gen = default_rng(seed)
-    sampled_indices: List[int] = []
+    sampled_indices: list[int] = []
     for group in unique_groups:
         n_sample = group_sample_size[group]
         index_pool = group_indices[group]
@@ -87,8 +86,7 @@ def oversample_dataset(
     sampled_index_array = np.array(sorted(sampled_indices))
     if only_index:
         return sampled_index_array
-    else:
-        r_dataset = dataset[sampled_index_array]
-        if isinstance(r_dataset, Dict):
-            raise TypeError
-        return r_dataset
+    r_dataset = dataset[sampled_index_array]
+    if isinstance(r_dataset, dict):
+        raise TypeError
+    return r_dataset
