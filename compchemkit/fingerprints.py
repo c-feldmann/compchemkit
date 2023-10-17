@@ -24,6 +24,12 @@ class CircularAtomEnvironment(AtomEnvironment):
     central_atom: int
     radius: int
 
+    def __new__(cls, central_atom: int, radius: int, environment_atoms: set[int]) -> CircularAtomEnvironment:
+        self = super(CircularAtomEnvironment, cls).__new__(cls, environment_atoms)
+        self.central_atom = central_atom
+        self.radius = radius
+        return self
+
 
 class Fingerprint(abc.ABC):
     """A metaclass representing all fingerprint subclasses."""
@@ -160,7 +166,7 @@ class Fingerprint(abc.ABC):
 class _MorganFingerprint(Fingerprint):
     _radius: int
 
-    def __init__(self, radius: int = 2, use_features: bool = False, n_jobs=1):
+    def __init__(self, radius: int = 2, use_features: bool = False, n_jobs: int = 1):
         super().__init__(n_jobs=n_jobs)
         self._use_features = use_features
         if isinstance(radius, int) and radius >= 0:
@@ -492,6 +498,11 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
 
 
 class MACCS(Fingerprint):
+    """Calculates the MACCS fingerprint for given molecules.
+
+    The MACCS fingerprint consists of 166 predefined substructures.
+    """
+
     def __init__(self, n_jobs: int = 1) -> None:
         """Initialize MACCS Key fingerprint generator.
 
@@ -583,9 +594,9 @@ class FragmentFingerprint(Fingerprint):
             pattern = FilterCatalog.SmartsMatcher(f"Pattern {i}", substructure, 1)
             self._filter.AddEntry(FilterCatalog.FilterCatalogEntry(str(i), pattern))
 
-    def _transform_mol(self, mol_obj: Chem.Mol) -> dict[int, int]:
+    def _transform_mol(self, mol: Chem.Mol) -> dict[int, int]:
         feature_dict = {
-            int(match.GetDescription()): 1 for match in self._filter.GetMatches(mol_obj)
+            int(match.GetDescription()): 1 for match in self._filter.GetMatches(mol)
         }
         return feature_dict
 
@@ -633,4 +644,4 @@ class FragmentFingerprint(Fingerprint):
                 bit2atom_dict[bit].append(atom_env)
 
         # Transforming defaultdict to dict
-        return {k: v for k, v in bit2atom_dict.items()}
+        return dict(bit2atom_dict.items())
