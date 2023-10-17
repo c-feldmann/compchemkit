@@ -26,8 +26,11 @@ def similarity_from_dense(
     intersection = matrix_a.dot(matrix_b.transpose())
     norm_1 = np.multiply(matrix_a, matrix_a).sum(axis=1)
     norm_2 = np.multiply(matrix_b, matrix_b).sum(axis=1)
-    union = np.add.outer(norm_1, norm_2.T) - intersection
-    return intersection / union
+    norm_1 = np.atleast_2d(norm_1)
+    norm_2 = np.atleast_2d(norm_2)
+    union = norm_1.T + norm_2 - intersection
+    similarity: npt.NDArray[np.float_] = intersection / union
+    return similarity
 
 
 def tanimoto_from_sparse(
@@ -54,11 +57,20 @@ def tanimoto_from_sparse(
     norm_1 = np.array(matrix_a.multiply(matrix_a).sum(axis=1))
     norm_2 = np.array(matrix_b.multiply(matrix_b).sum(axis=1))
     union = norm_1 + norm_2.T - intersection
-    return intersection / union
+    similarity: npt.NDArray[np.float_] = intersection / union
+    return similarity
 
 
 if __name__ == "__main__":
-    fp1 = sparse.csr_matrix(np.array([[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 0, 0]]))
+    fp1 = sparse.csr_matrix(
+        np.array(
+            [
+                [0, 0, 0, 1],
+                [0, 0, 1, 1],
+                [0, 1, 0, 0],
+            ]
+        )
+    )
     fp2 = sparse.csr_matrix(
         np.array(
             [
