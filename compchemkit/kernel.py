@@ -1,6 +1,8 @@
+"""Kernel functions for compound similarities."""
+
 import numpy as np
 import numpy.typing as npt
-import scipy.sparse as sparse
+from scipy import sparse
 
 
 def similarity_from_dense(
