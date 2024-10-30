@@ -101,7 +101,9 @@ class DataSet:
 
         Returns
         -------
-
+        dict[str, Any] | DataSet
+            Dict with columns as key and the datapoint attributes as corresponding values.
+            Or subset of the Dataset with datapoints corresponding to the given indices.
         """
         if isinstance(idx, int):
             return {col: self.__dict__[col] for col in self.columns}

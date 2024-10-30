@@ -29,12 +29,12 @@ class PainsFilter:
 
     @property
     def n_jobs(self) -> int:
-        """Returns the number of cores used during filtering."""
+        """Return the number of cores used during filtering."""
         return self._n_jobs
 
     @n_jobs.setter
     def n_jobs(self, n_cores: int) -> None:
-        """Sets the number of cores used during filtering.
+        """Set the number of cores used during filtering.
 
         Parameters
         ----------

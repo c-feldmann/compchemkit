@@ -86,7 +86,7 @@ def get_similaritymap_from_weights(
     contour_lines: int = 10,
     contour_params: Optional[Draw.ContourParams] = None,
 ) -> Draw.MolDraw2D:
-    """Generates the similarity map for a molecule given the atomic weights.
+    """Generate the similarity map for a molecule given the atomic weights.
 
     Stolen... uhm... copied from Chem.Draw.SimilarityMaps
 
@@ -164,7 +164,7 @@ def rdkit_gaussplot(
     n_contour_lines: int = 5,
     color_tuple: tuple[RNGATuple, RNGATuple, RNGATuple] | None = None,
 ) -> Draw.MolDraw2D:
-    """
+    """Generate a heatmap where the height is the atom weight.
 
     Parameters
     ----------
