@@ -70,10 +70,12 @@ def assign_prediction_importance(
                 atom_contribution[atom] += weights[bit] / (
                     len(atom_set.environment_atoms) * n_machtes
                 )
-    assert np.isclose(sum(weights), sum(atom_contribution.values())), (
-        sum(weights),
-        sum(atom_contribution.values()),
-    )
+    if not np.isclose(sum(weights), sum(atom_contribution.values())):
+        raise ValueError(
+            f"Total of given importance ({sum(weights)}) is not equal "
+            f"to total of mapped importance {sum(atom_contribution.values())}"
+        )
+
     return atom_contribution
 
 

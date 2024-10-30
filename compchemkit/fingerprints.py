@@ -287,7 +287,10 @@ class _MorganFingerprint(Fingerprint):
                 amap: dict[int, int] = {}
                 _ = Chem.PathToSubmol(mol_obj, env, atomMap=amap)
                 env_atoms = amap.keys()
-                assert central_atom in env_atoms
+                if central_atom not in env_atoms:
+                    raise AssertionError(
+                        "Central atom not part of the environment atoms!"
+                    )
                 result_dict[bit].append(
                     CircularAtomEnvironment(central_atom, radius, set(env_atoms))
                 )
