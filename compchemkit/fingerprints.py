@@ -5,7 +5,13 @@ from __future__ import annotations
 import abc
 from collections import defaultdict
 from multiprocessing import Pool
-from typing import Iterable, NamedTuple, Optional, Self
+from typing import Iterable, NamedTuple, Optional
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
 
 import numpy as np
 from rdkit import Chem
