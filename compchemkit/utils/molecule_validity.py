@@ -1,5 +1,8 @@
+"""Functions to assert only valid molecules."""
+
 from typing import Iterable
-import rdkit.Chem as Chem
+
+from rdkit import Chem
 
 
 def construct_check_mol_list(smiles_list: Iterable[str]) -> list[Chem.Mol]:

@@ -1,30 +1,58 @@
+"""Functions and classes used for generating fingerprints."""
+
 from __future__ import annotations
+
 import abc
-from typing import Iterable, Optional, Self, NamedTuple
 from collections import defaultdict
 from multiprocessing import Pool
+from typing import Iterable, NamedTuple, Optional
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
 
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import AllChem
-from rdkit.Chem import FilterCatalog
+from rdkit.Chem import AllChem, FilterCatalog
 from scipy import sparse
 
-from compchemkit.utils.molecule_validity import construct_check_mol_list
 from compchemkit.utils.matrix import generate_matrix_from_item_list
+from compchemkit.utils.molecule_validity import construct_check_mol_list
 
 
 class AtomEnvironment(NamedTuple):
-    """ "A Class to store environment-information for fingerprint features"""
+    """A Class to store environment-information for fingerprint features."""
+
     environment_atoms: set[int]
 
 
 class CircularAtomEnvironment(AtomEnvironment):
-    """ "A Class to store environment-information for morgan-fingerprint features"""
+    """A Class to store environment-information for morgan-fingerprint features."""
+
     central_atom: int
     radius: int
 
-    def __new__(cls, central_atom: int, radius: int, environment_atoms: set[int]) -> CircularAtomEnvironment:
+    def __new__(
+        cls, central_atom: int, radius: int, environment_atoms: set[int]
+    ) -> Self:
+        """Create a new CircularAtomEnvironment object.
+
+        Parameters
+        ----------
+        central_atom: int
+            Index of the central atom.
+        radius: int
+            Radius for the environment (number of bonds away from the central atom).
+        environment_atoms: set[int]
+            Indices of all atoms which are within the radius of the central atom.
+
+        Returns
+        -------
+        Self
+            The created object.
+        """
         self = super(CircularAtomEnvironment, cls).__new__(cls, environment_atoms)
         self.central_atom = central_atom
         self.radius = radius
@@ -38,6 +66,13 @@ class Fingerprint(abc.ABC):
     _n_bits: int
 
     def __init__(self, n_jobs: int) -> None:
+        """Initialize the Fingerprint object.
+
+        Parameters
+        ----------
+        n_jobs: int
+            Number of jobs to use.
+        """
         self.n_jobs = n_jobs
 
     @property
@@ -167,6 +202,17 @@ class _MorganFingerprint(Fingerprint):
     _radius: int
 
     def __init__(self, radius: int = 2, use_features: bool = False, n_jobs: int = 1):
+        """Initialize _MorganFingerprint object.
+
+        Parameters
+        ----------
+        radius: int
+            Maximum radius of derived circular features.
+        use_features: bool
+            Encode Atoms based on their features.
+        n_jobs:
+            Number of cores to use.
+        """
         super().__init__(n_jobs=n_jobs)
         self._use_features = use_features
         if isinstance(radius, int) and radius >= 0:
@@ -177,7 +223,13 @@ class _MorganFingerprint(Fingerprint):
             )
 
     def __len__(self) -> int:
-        """Return length of the feature vector."""
+        """Return length of the feature vector.
+
+        Returns
+        -------
+        int
+            Length of the feature vector
+        """
         return self.n_bits
 
     @property
@@ -238,26 +290,31 @@ class _MorganFingerprint(Fingerprint):
                     )
                     continue
                 env = Chem.FindAtomEnvironmentOfRadiusN(mol_obj, radius, central_atom)
-                amap: dict[int, int] = dict()
+                amap: dict[int, int] = {}
                 _ = Chem.PathToSubmol(mol_obj, env, atomMap=amap)
                 env_atoms = amap.keys()
-                assert central_atom in env_atoms
+                if central_atom not in env_atoms:
+                    raise AssertionError(
+                        "Central atom not part of the environment atoms!"
+                    )
                 result_dict[bit].append(
                     CircularAtomEnvironment(central_atom, radius, set(env_atoms))
                 )
 
         # Transforming default dict to dict
-        return {k: v for k, v in result_dict.items()}
+        return dict(result_dict.items())
 
 
 class FoldedMorganFingerprint(_MorganFingerprint):
+    """Class for calculating the folded (default) Moragn Fingerprint."""
+
     def __init__(
         self,
         n_bits: int = 2048,
         radius: int = 2,
         use_features: bool = False,
         n_jobs: int = 1,
-    ):
+    ) -> None:
         """Initialize fingerprint generation method for folded morgan fingerprint.
 
         Parameters
@@ -270,10 +327,6 @@ class FoldedMorganFingerprint(_MorganFingerprint):
             Encode Atoms based on their features.
         n_jobs:
             Number of cores to use.
-
-        Returns
-        -------
-        None
         """
         super().__init__(radius=radius, use_features=use_features, n_jobs=n_jobs)
         if isinstance(n_bits, int) and n_bits >= 0:
@@ -301,6 +354,21 @@ class FoldedMorganFingerprint(_MorganFingerprint):
         return self
 
     def _transform_mol(self, mol: Chem.Mol) -> dict[int, int]:
+        """Transform the mol to a dict of features with their vector position and counts.
+
+        Notes
+        -----
+        For this method the count is always `1`.
+
+        Parameters
+        ----------
+        mol: Chem.Mol
+            Mol to transform.
+        Returns
+        -------
+        dict[int, int]
+            Dict of vector position of features and their respective counts.
+        """
         fp = AllChem.GetMorganFingerprintAsBitVect(
             mol, self.radius, useFeatures=self._use_features, nBits=self._n_bits
         )
@@ -333,7 +401,8 @@ class FoldedMorganFingerprint(_MorganFingerprint):
 
 
 class UnfoldedMorganFingerprint(_MorganFingerprint):
-    """Transforms smiles-strings or molecular objects into unfolded bit-vectors based on Morgan-fingerprints [1].
+    """Transform smiles-strings or molecular objects into unfolded bit-vectors based on Morgan-fingerprints [1].
+
     Features are mapped to bits based on the amount of molecules they occur in.
 
     Long version:
@@ -359,7 +428,8 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
         ignore_unknown: bool = False,
         n_jobs: int = 1,
     ):
-        """Initializes the class
+        """Initialize the class.
+
         Parameters
         ----------
         counted: bool
@@ -369,6 +439,11 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
             radius of the circular fingerprint [1]. Radius of 2 corresponds to ECFP4 (radius 2 -> diameter 4)
         use_features: bool
             Instead of atoms, features are encoded in the fingerprint. [2]
+        ignore_unknown: bool
+            If true, features not seen during fitting will be ignored during transform.
+            Else an error is raised during transform.
+        n_jobs: int
+            Number of cores to use.
 
         References
         ----------
@@ -422,7 +497,17 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
         return self
 
     def _gen_features(self, mol_obj: Chem.Mol) -> dict[int, int]:
-        """Return a dict, where the key is the feature-hash and the value is the count."""
+        """Return a dict, where the key is the feature-hash and the value is the count.
+
+        Parameters
+        ----------
+        mol_obj: Chem.Mol
+            Mol to transform.
+        Returns
+        -------
+        dict[int, int]
+            Dict of vector position of features and their respective counts.
+        """
         return dict(
             AllChem.GetMorganFingerprint(
                 mol_obj, self.radius, useFeatures=self.use_features
@@ -444,7 +529,7 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
             Value: list of matching environments.
                 Matching environments are given as tuple of central atom id and radius.
         """
-        bi: dict[int, list[tuple[int, int]]] = dict()
+        bi: dict[int, list[tuple[int, int]]] = {}
         _ = AllChem.GetMorganFingerprint(
             mol_obj, self.radius, useFeatures=self.use_features, bitInfo=bi
         )
@@ -470,10 +555,35 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
         return generate_matrix_from_item_list(new_fp_list, self.n_bits)
 
     def _transform_mol(self, mol: Chem.Mol) -> dict[int, int]:
+        """Transform the mol to a dict of features with their vector position and counts.
+
+        Parameters
+        ----------
+        mol: Chem.Mol
+            Mol to transform.
+        Returns
+        -------
+        dict[int, int]
+            Dict of vector position of features and their respective counts.
+        """
         feature_dict = self._gen_features(mol)
         return self._map_features_dict(feature_dict)
 
     def _map_features_dict(self, feature_hash_dict: dict[int, int]) -> dict[int, int]:
+        """Map the feature hash to the bit position.
+
+        Mapping is created in UnfoldedMorganFingerprint._create_mapping
+
+        Parameters
+        ----------
+        feature_hash_dict: dict[int, int]
+            Dict of molecule feature hashes and respective counts.
+
+        Returns
+        -------
+        dict[int, int]
+            Dict of molecule feature vector positions and respective counts.
+        """
         unknown_features = set(feature_hash_dict.keys()) - set(self.bit_mapping.keys())
         if unknown_features:
             if self.ignore_unknown:
@@ -486,6 +596,14 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
         return {self.bit_mapping[f]: 1 for f, c in feature_hash_dict.items()}
 
     def _create_mapping(self, molecule_features: Iterable[dict[int, int]]) -> None:
+        """Map features to a vector position after all features are obtained during fitting.
+
+        Parameters
+        ----------
+        molecule_features: Iterable[dict[int, int]]
+            Each item in the iterable represents a molecule, which is represented by a dict.
+            The dict contains the feature hash and its occurence.
+        """
         unraveled_features = [f for f_list in molecule_features for f in f_list.keys()]
         feature_hash, count = np.unique(unraveled_features, return_counts=True)
         feature_hash_dict = dict(zip(feature_hash, count))
@@ -508,11 +626,8 @@ class MACCS(Fingerprint):
 
         Parameters
         ----------
-        n_jobs: number of cores to use.
-
-        Returns
-        -------
-        None
+        n_jobs: int
+            Number of cores to use.
         """
         super().__init__(n_jobs=n_jobs)
         self._n_bits = 166
@@ -535,6 +650,22 @@ class MACCS(Fingerprint):
         return self
 
     def _transform_mol(self, mol: Chem.Mol) -> dict[int, int]:
+        """Transform the molecule to a dict of bits and the numeric value 1.
+
+        Notes
+        -----
+        The dict structure is used for compatibility with the parent class.
+
+        Parameters
+        ----------
+        mol: Chem.Mol
+            Molecule to transform.
+
+        Returns
+        -------
+        dict[int, int]
+            Dict where keys are the bit positions and values are always `1`.
+        """
         maccs_fp = AllChem.GetMACCSKeysFingerprint(mol)
         return {bit: 1 for bit in maccs_fp.GetOnBits()}
 
@@ -561,7 +692,9 @@ class MACCS(Fingerprint):
         return r_matrix[:, 1:]
 
 
-class FragmentFingerprint(Fingerprint):
+class SubstructureFingerprint(Fingerprint):
+    """Fingerprint based on predefined substructures."""
+
     def __init__(self, substructure_list: list[str], n_jobs: int = 1) -> None:
         """Fingerprint from a list of substructures.
 
@@ -595,6 +728,22 @@ class FragmentFingerprint(Fingerprint):
             self._filter.AddEntry(FilterCatalog.FilterCatalogEntry(str(i), pattern))
 
     def _transform_mol(self, mol: Chem.Mol) -> dict[int, int]:
+        """Transform the molecule to a dict of bits and their respective counts.
+
+        Notes
+        -----
+        For now the pattern counts are not used and are only checked for presence.
+
+        Parameters
+        ----------
+        mol: Chem.Mol
+            Molecule to transform.
+
+        Returns
+        -------
+        dict[int, int]
+            Dict where keys are the bit positions and values are the frequency.
+        """
         feature_dict = {
             int(match.GetDescription()): 1 for match in self._filter.GetMatches(mol)
         }

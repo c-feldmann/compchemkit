@@ -1,18 +1,17 @@
+"""Functions for model evaluation."""
 
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
-from sklearn import metrics
 import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 import seaborn as sns
+from sklearn import metrics
 
 
 def evaluate_classification(
     y_true: npt.NDArray[np.int_],
     y_predicted: npt.NDArray[np.int_],
-    y_score: npt.NDArray[np.float_] | None = None,
+    y_score: npt.NDArray[np.float64] | None = None,
     nan2zero: bool = False,
 ) -> dict[str, float]:
     """Calculate available metrics for classification.
@@ -23,7 +22,7 @@ def evaluate_classification(
         Array of true class labels.
     y_predicted: npt.NDArray[np.int_]
         Array of predicted class labels.
-    y_score: Optional[npt.NDArray[np.float_]]
+    y_score: Optional[npt.NDArray[np.float64]]
         Array of class labels scores (e.g. probability).
     nan2zero: bool
         Map invalid metric calculations to zero.
@@ -72,15 +71,15 @@ def evaluate_classification(
 
 
 def evaluate_regression(
-    y_true: npt.NDArray[np.float_], y_predicted: npt.NDArray[np.float_]
+    y_true: npt.NDArray[np.float64], y_predicted: npt.NDArray[np.float64]
 ) -> dict[str, float]:
     """Calculate available metrics for regression.
 
     Parameters
     ----------
-    y_true: npt.NDArray[np.float_]
+    y_true: npt.NDArray[np.float64]
         Array of true values.
-    y_predicted: npt.NDArray[np.float_]
+    y_predicted: npt.NDArray[np.float64]
         Array of predicted values.
     Returns
     -------
@@ -114,6 +113,7 @@ def evaluate_regression(
     return result_dict
 
 
+# pylint: disable=too-many-locals, too-many-statements
 def visualize_metrics(
     dataframe: pd.DataFrame,
     save_path: str | None = None,
@@ -168,7 +168,7 @@ def visualize_metrics(
         set(metric_list) - set(zero2one_scores) - set(minus_one2one_scores)
     )
     if unknown_metrics:
-        raise ValueError("Unknown metric(s): {}".format(", ".join(unknown_metrics)))
+        raise ValueError(f"Unknown metric(s): {', '.join(unknown_metrics)}")
 
     n_grid_cols = round(12 * len(metric_list))
     fig = plt.figure(figsize=figsize)
@@ -197,7 +197,7 @@ def visualize_metrics(
         order=zero2one_scores,
         hue_order=hue_order,
         ax=ax1,
-        **kwargs
+        **kwargs,
     )
     _ = vis(
         data=dataframe.query("metric.isin(@minus_one2one_scores)"),
@@ -207,7 +207,7 @@ def visualize_metrics(
         order=minus_one2one_scores,
         hue_order=hue_order,
         ax=ax2,
-        **kwargs
+        **kwargs,
     )
 
     ax2.get_legend().remove()

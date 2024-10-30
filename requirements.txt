@@ -1,3 +1,4 @@
+joblib
 matplotlib
 numpy
 pandas
@@ -6,3 +7,4 @@ rdkit
 scikit-learn
 scipy
 seaborn
+typing_extensions; python_version == "3.10"

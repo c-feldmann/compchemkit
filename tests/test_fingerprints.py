@@ -1,6 +1,7 @@
-import unittest
+"""Test cases for fingerprints."""
 
 import os
+import unittest
 
 import numpy as np
 import numpy.typing as npt
@@ -8,10 +9,7 @@ import pandas as pd
 from rdkit import Chem
 from scipy import sparse
 
-from compchemkit.fingerprints import (
-    UnfoldedMorganFingerprint,
-    FragmentFingerprint,
-)
+from compchemkit.fingerprints import SubstructureFingerprint, UnfoldedMorganFingerprint
 from compchemkit.utils.molecule_validity import construct_check_mol_list
 
 test_folder = os.path.dirname(__file__)
@@ -20,6 +18,8 @@ smiles_list = smiles_df["SMILES"].to_list()
 
 
 class ConstructingFingerprints(unittest.TestCase):
+    """Test the calculation of fingerprints."""
+
     def test_independence_of_constructing(self) -> None:
         """Test if fit and transform give same results as fit_transform.
 
@@ -65,7 +65,7 @@ class ConstructingFingerprints(unittest.TestCase):
         None
         """
         smarts_list = ["[#6]", "[#7]", "[#8]"]
-        frag_fingerprint = FragmentFingerprint(smarts_list)
+        frag_fingerprint = SubstructureFingerprint(smarts_list)
         fp = frag_fingerprint.transform(construct_check_mol_list(smiles_list))
 
         # Looped search

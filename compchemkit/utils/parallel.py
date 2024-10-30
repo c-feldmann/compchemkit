@@ -1,5 +1,8 @@
-import multiprocessing
+"""Functions auxiliary for parallel processing."""
+
 import warnings
+
+from joblib.parallel import cpu_count
 
 
 def check_adapt_n_jobs(n_jobs: int) -> int:
@@ -22,17 +25,16 @@ def check_adapt_n_jobs(n_jobs: int) -> int:
         return 1
 
     try:
-        available_cpus = multiprocessing.cpu_count()
+        available_cpus = cpu_count()
 
         if n_jobs == -1:
             return available_cpus
         if n_jobs <= available_cpus:
             return n_jobs
-        else:
-            warnings.warn(
-                f"More cores than available requested! Falling back to {available_cpus}"
-            )
-            return available_cpus
+        warnings.warn(
+            f"More cores than available requested! Falling back to {available_cpus}"
+        )
+        return available_cpus
 
     except NotImplementedError:
         warnings.warn("multiprocessing not supported. Falling back to single process!")
