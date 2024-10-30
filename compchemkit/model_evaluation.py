@@ -1,10 +1,10 @@
+"""Functions for model evaluation."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import seaborn as sns
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 from sklearn import metrics
 
 
@@ -113,6 +113,7 @@ def evaluate_regression(
     return result_dict
 
 
+# pylint: disable=too-many-locals, too-many-statements
 def visualize_metrics(
     dataframe: pd.DataFrame,
     save_path: str | None = None,
@@ -167,7 +168,7 @@ def visualize_metrics(
         set(metric_list) - set(zero2one_scores) - set(minus_one2one_scores)
     )
     if unknown_metrics:
-        raise ValueError("Unknown metric(s): {}".format(", ".join(unknown_metrics)))
+        raise ValueError(f"Unknown metric(s): {', '.join(unknown_metrics)}")
 
     n_grid_cols = round(12 * len(metric_list))
     fig = plt.figure(figsize=figsize)
@@ -196,7 +197,7 @@ def visualize_metrics(
         order=zero2one_scores,
         hue_order=hue_order,
         ax=ax1,
-        **kwargs
+        **kwargs,
     )
     _ = vis(
         data=dataframe.query("metric.isin(@minus_one2one_scores)"),
@@ -206,7 +207,7 @@ def visualize_metrics(
         order=minus_one2one_scores,
         hue_order=hue_order,
         ax=ax2,
-        **kwargs
+        **kwargs,
     )
 
     ax2.get_legend().remove()
