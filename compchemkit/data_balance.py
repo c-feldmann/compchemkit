@@ -1,4 +1,5 @@
 """Functions used for balancing data."""
+
 from typing import Any, Literal, TypeVar
 
 import numpy as np
@@ -10,6 +11,7 @@ from compchemkit.data_storage import DataSet
 __all__ = ["undersample_dataset", "oversample_dataset"]
 
 _T = TypeVar("_T")
+
 
 def determine_sample_size(
     group_arr: npt.ArrayLike,
@@ -48,8 +50,7 @@ def determine_sample_size(
     else:
         raise ValueError(f"Unknown method: {method}")
     group_sample_size = {
-        group: int(np.floor(ratios[group] * group_factor))
-        for group in unique_groups
+        group: int(np.floor(ratios[group] * group_factor)) for group in unique_groups
     }
     return group_sample_size
 
@@ -80,7 +81,9 @@ def undersample_dataset(
     DataSet | npt.NDArray[np.int64]
         The subsampled Dataset, or if `only_index=True` the respective row indices.
     """
-    group_sample_size = determine_sample_size(dataset.attribute_dict[column], ratios, "undersample")
+    group_sample_size = determine_sample_size(
+        dataset.attribute_dict[column], ratios, "undersample"
+    )
 
     group_indices = {}
     for group in group_sample_size:
@@ -126,7 +129,9 @@ def oversample_dataset(
     DataSet | npt.NDArray[np.int64]
         The oversamplesampled Dataset, or if `only_index=True` the respective row indices.
     """
-    group_sample_size = determine_sample_size(dataset.attribute_dict[column], ratios, "oversample")
+    group_sample_size = determine_sample_size(
+        dataset.attribute_dict[column], ratios, "oversample"
+    )
 
     group_indices = {}
     for group in group_sample_size:
