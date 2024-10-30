@@ -14,3 +14,6 @@ license = {text = "BSD"}
 
 [tool.setuptools.dynamic]
 dependencies = {file = "requirements.txt"}
+
+[tool.setuptools.package-data]
+"compchemkit" = ["py.typed"]
