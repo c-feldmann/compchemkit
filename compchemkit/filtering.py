@@ -1,4 +1,5 @@
 """Functions for filtering compounds."""
+
 from typing import Iterable
 
 from joblib import Parallel, delayed
@@ -10,6 +11,7 @@ from compchemkit.utils.parallel import check_adapt_n_jobs
 
 class PainsFilter:
     """Class for removing compounds containing PAINS substructures."""
+
     _n_jobs: int
 
     def __init__(self, n_jobs: int = -1) -> None:

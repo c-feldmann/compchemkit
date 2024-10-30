@@ -18,6 +18,7 @@ from compchemkit.utils.molecule_validity import construct_check_mol_list
 
 class AtomEnvironment(NamedTuple):
     """A Class to store environment-information for fingerprint features"""
+
     environment_atoms: set[int]
 
 
