@@ -1,3 +1,5 @@
+"""Functions used for balancing data."""
+
 from typing import Any
 
 import numpy as np
@@ -13,7 +15,26 @@ def undersample_dataset(
     ratios: dict[Any, float] | None = None,
     seed: int | None = None,
     only_index: bool = False,
-) -> DataSet | npt.NDArray[np.int_]:
+) -> DataSet | npt.NDArray[np.int64]:
+    """Undersample the dataset by the column given by label.
+
+    Parameters
+    ----------
+    dataset: DataSet
+        Dataset to balance by undersampling.
+    column: str
+        Values to balance the dataset for.
+    ratios: dict[Any, float] | None, optional
+        Specifies specific ratios for `column` labels for balance.
+    seed: int | None, optional
+        Random seed to use for random sampling.
+    only_index: bool, default: True
+        If true, only the indices of the sampled rows are returned.
+    Returns
+    -------
+    DataSet | npt.NDArray[np.int64]
+        The subsampled Dataset, or if `only_index=True` the respective row indices.
+    """
     unique_groups, count = np.unique(dataset.attribute_dict[column], return_counts=True)
     group_count = dict(zip(unique_groups, count))
 
@@ -55,10 +76,29 @@ def oversample_dataset(
     seed: int | None = None,
     only_index: bool = False,
 ) -> DataSet | npt.NDArray[np.int_]:
+    """Oversample the dataset by the column given by label.
+
+    Parameters
+    ----------
+    dataset: DataSet
+        Dataset to balance by oversamplesampling.
+    column: str
+        Values to balance the dataset for.
+    ratios: dict[Any, float] | None, optional
+        Specifies specific ratios for `column` labels for balance.
+    seed: int | None, optional
+        Random seed to use for random sampling.
+    only_index: bool, default: True
+        If true, only the indices of the sampled rows are returned.
+    Returns
+    -------
+    DataSet | npt.NDArray[np.int64]
+        The oversamplesampled Dataset, or if `only_index=True` the respective row indices.
+    """
     unique_groups, count = np.unique(dataset.attribute_dict[column], return_counts=True)
     group_count = dict(zip(unique_groups, count))
 
-    group_indices = dict()
+    group_indices = {}
     for group in unique_groups:
         group_indices[group] = np.where(dataset.attribute_dict[column] == group)[0]
 
@@ -68,7 +108,7 @@ def oversample_dataset(
     group_count_scaled = {
         group: group_count[group] / ratios[group] for group in unique_groups
     }
-    required_group_count = max([gcs for gcs in group_count_scaled.values()])
+    required_group_count = max((gcs for gcs in group_count_scaled.values()))
     group_sample_size = {
         group: int(np.floor(ratios[group] * required_group_count))
         for group in unique_groups
