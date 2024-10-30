@@ -1,9 +1,11 @@
 from typing import Any
+
 import numpy as np
 import numpy.typing as npt
 from numpy.random import default_rng
 
 from compchemkit.data_storage import DataSet
+
 
 def undersample_dataset(
     dataset: DataSet,

@@ -1,6 +1,7 @@
 """Define Types throughout the package."""
-import numpy.typing as npt
+
 import numpy as np
+import numpy.typing as npt
 from scipy import sparse
 
 RNGATuple = tuple[float, float, float, float]

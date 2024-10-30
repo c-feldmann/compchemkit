@@ -1,30 +1,34 @@
 from __future__ import annotations
+
 import abc
-from typing import Iterable, Optional, Self, NamedTuple
 from collections import defaultdict
 from multiprocessing import Pool
+from typing import Iterable, NamedTuple, Optional, Self
 
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import AllChem
-from rdkit.Chem import FilterCatalog
+from rdkit.Chem import AllChem, FilterCatalog
 from scipy import sparse
 
-from compchemkit.utils.molecule_validity import construct_check_mol_list
 from compchemkit.utils.matrix import generate_matrix_from_item_list
+from compchemkit.utils.molecule_validity import construct_check_mol_list
 
 
 class AtomEnvironment(NamedTuple):
     """ "A Class to store environment-information for fingerprint features"""
+
     environment_atoms: set[int]
 
 
 class CircularAtomEnvironment(AtomEnvironment):
     """ "A Class to store environment-information for morgan-fingerprint features"""
+
     central_atom: int
     radius: int
 
-    def __new__(cls, central_atom: int, radius: int, environment_atoms: set[int]) -> CircularAtomEnvironment:
+    def __new__(
+        cls, central_atom: int, radius: int, environment_atoms: set[int]
+    ) -> CircularAtomEnvironment:
         self = super(CircularAtomEnvironment, cls).__new__(cls, environment_atoms)
         self.central_atom = central_atom
         self.radius = radius

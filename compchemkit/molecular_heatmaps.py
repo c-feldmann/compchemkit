@@ -1,14 +1,14 @@
+import io
 from collections import defaultdict
+from typing import Optional, Sequence, Union
+
 import numpy as np
 import numpy.typing as npt
-import io
-from rdkit import Chem
-from rdkit.Chem import Draw
-from rdkit import Geometry
 from PIL import Image as image
-from typing import Sequence, Optional, Union
-from compchemkit.fingerprints import AtomEnvironment
-from compchemkit.fingerprints import _MorganFingerprint
+from rdkit import Chem, Geometry
+from rdkit.Chem import Draw
+
+from compchemkit.fingerprints import AtomEnvironment, _MorganFingerprint
 from compchemkit.utils.custom_types import RNGATuple
 
 

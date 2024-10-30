@@ -1,12 +1,11 @@
-
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
-from sklearn import metrics
 import pandas as pd
-import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-import seaborn as sns
+from sklearn import metrics
 
 
 def evaluate_classification(

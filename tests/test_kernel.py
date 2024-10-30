@@ -1,4 +1,5 @@
 """Test functionality of kernels."""
+
 import os
 import unittest
 
@@ -9,7 +10,6 @@ from scipy import sparse
 from compchemkit.fingerprints import UnfoldedMorganFingerprint
 from compchemkit.kernel import similarity_from_dense, tanimoto_from_sparse
 from compchemkit.utils.molecule_validity import construct_check_mol_list
-
 
 test_folder = os.path.dirname(__file__)
 smiles_df = pd.read_csv(f"{test_folder}/test_data/test_smiles.tsv")

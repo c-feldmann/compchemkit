@@ -1,8 +1,8 @@
+import multiprocessing
 from typing import Iterable, Optional
 
 import rdkit.Chem as Chem
 from rdkit.Chem import FilterCatalog
-import multiprocessing
 
 from compchemkit.utils.parallel import check_adapt_n_jobs
 

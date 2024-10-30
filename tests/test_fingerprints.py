@@ -1,6 +1,5 @@
-import unittest
-
 import os
+import unittest
 
 import numpy as np
 import numpy.typing as npt
@@ -8,10 +7,7 @@ import pandas as pd
 from rdkit import Chem
 from scipy import sparse
 
-from compchemkit.fingerprints import (
-    UnfoldedMorganFingerprint,
-    FragmentFingerprint,
-)
+from compchemkit.fingerprints import FragmentFingerprint, UnfoldedMorganFingerprint
 from compchemkit.utils.molecule_validity import construct_check_mol_list
 
 test_folder = os.path.dirname(__file__)

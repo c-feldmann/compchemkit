@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, Union, Set
+
+from typing import Any, Dict, List, Optional, Set, Union
 
 import numpy as np
 import numpy.typing as npt
