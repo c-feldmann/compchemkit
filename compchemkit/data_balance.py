@@ -90,14 +90,14 @@ def undersample_dataset(
         group_indices[group] = np.where(dataset.attribute_dict[column] == group)[0]
 
     random_gen = default_rng(seed)
-    sampled_indices: set[int | np.int64] = set()
+    sampled_indices: set[int] = set()
     for group, n_sample in group_sample_size.items():
         index_pool = group_indices[group]
         sampled_indices.update(random_gen.choice(index_pool, n_sample, replace=False))
-    sampled_indice_array = np.array(sorted(sampled_indices))
+    sampled_indices_array = np.array(sorted(sampled_indices))
     if only_index:
-        return sampled_indice_array
-    r_dataset = dataset[sampled_indice_array]
+        return sampled_indices_array
+    r_dataset = dataset[sampled_indices_array]
     if isinstance(r_dataset, dict):
         raise TypeError
     return r_dataset
