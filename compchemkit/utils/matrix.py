@@ -1,3 +1,5 @@
+"""Functions for matrices."""
+
 from typing import Iterable
 
 from scipy.sparse import csr_matrix

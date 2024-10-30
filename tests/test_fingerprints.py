@@ -1,3 +1,5 @@
+"""Test cases for fingerprints."""
+
 import os
 import unittest
 
@@ -16,6 +18,8 @@ smiles_list = smiles_df["SMILES"].to_list()
 
 
 class ConstructingFingerprints(unittest.TestCase):
+    """Test the calculation of fingerprints."""
+
     def test_independence_of_constructing(self) -> None:
         """Test if fit and transform give same results as fit_transform.
 

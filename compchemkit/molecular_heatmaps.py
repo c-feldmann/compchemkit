@@ -1,3 +1,5 @@
+"""Functions for molecular heatmaps."""
+
 import io
 from collections import defaultdict
 from typing import Optional, Sequence, Union
@@ -13,8 +15,24 @@ from compchemkit.utils.custom_types import RNGATuple
 
 
 def shap2atomweight(
-    mol: Chem.Mol, fingerprint: _MorganFingerprint, shap_mat: npt.NDArray[np.float_]
+    mol: Chem.Mol, fingerprint: _MorganFingerprint, shap_mat: npt.NDArray[np.float64]
 ) -> list[float]:
+    """Map the feature importance to the corresponding atoms.
+
+    Parameters
+    ----------
+    mol: Chem.Mol
+        Molecule on which the importance is mapped.
+    fingerprint: _MorganFingerprint
+        Fingerprint method used to derive the bitvector.
+    shap_mat: npt.NDArray[np.float64]
+        Vector with feature importances.
+
+    Returns
+    -------
+    list[float]
+        Importance of each atom (Ordered like the rdkit atoms).
+    """
     bit_atom_env_dict: dict[int, Sequence[AtomEnvironment]]
     bit_atom_env_dict = dict(
         fingerprint.bit2atom_mapping(mol)
@@ -28,8 +46,22 @@ def shap2atomweight(
 
 
 def assign_prediction_importance(
-    bit_dict: dict[int, Sequence[AtomEnvironment]], weights: npt.NDArray[np.float_]
+    bit_dict: dict[int, Sequence[AtomEnvironment]], weights: npt.NDArray[np.float64]
 ) -> dict[int, float]:
+    """Map the feature importance to the corresponding atoms.
+
+    Parameters
+    ----------
+    bit_dict: dict[int, Sequence[AtomEnvironment]]
+        Mapping of bit position to a list of all matching environments, which are lists of atoms.
+    weights: npt.NDArray[np.float64]
+        Feature importance which is allocated to the atoms.
+
+    Returns
+    -------
+    dict[int, float]
+        Atom indices (key) and their respective importance (values).
+    """
     atom_contribution: dict[int, float] = defaultdict(lambda: 0)
     for bit, atom_env_list in bit_dict.items():  # type: int, Sequence[AtomEnvironment]
         n_machtes = len(atom_env_list)
@@ -128,10 +160,28 @@ def get_similaritymap_from_weights(
 
 def rdkit_gaussplot(
     mol: Chem.Mol,
-    weights: npt.NDArray[np.float_],
+    weights: npt.NDArray[np.float64],
     n_contour_lines: int = 5,
-    color_tuple: Optional[tuple[RNGATuple, RNGATuple, RNGATuple]] = None,
+    color_tuple: tuple[RNGATuple, RNGATuple, RNGATuple] | None = None,
 ) -> Draw.MolDraw2D:
+    """
+
+    Parameters
+    ----------
+    mol: Chem.Mol
+        Mol containing the atom positions.
+    weights: npt.NDArray[np.float64]
+        Weights of the atoms (height of the atoms on the contour plot.)
+    n_contour_lines: int, default: 5
+        Number of contour lines.
+    color_tuple: tuple[RNGATuple, RNGATuple, RNGATuple] | None, optional
+        Specification of the color gradient to use.
+
+    Returns
+    -------
+    Draw.MolDraw2D
+        Rdkit canvas with heatmap and molecule.
+    """
     d = Draw.MolDraw2DCairo(600, 600)
     # Coloring atoms of element 0 to 100 black
     d.drawOptions().updateAtomPalette({i: (0, 0, 0, 1) for i in range(100)})
