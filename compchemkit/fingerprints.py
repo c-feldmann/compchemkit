@@ -1,3 +1,5 @@
+"""Functions and classes used for generating fingerprints."""
+
 from __future__ import annotations
 
 import abc
@@ -15,20 +17,19 @@ from compchemkit.utils.molecule_validity import construct_check_mol_list
 
 
 class AtomEnvironment(NamedTuple):
-    """ "A Class to store environment-information for fingerprint features"""
-
+    """A Class to store environment-information for fingerprint features"""
     environment_atoms: set[int]
 
 
 class CircularAtomEnvironment(AtomEnvironment):
-    """ "A Class to store environment-information for morgan-fingerprint features"""
+    """A Class to store environment-information for morgan-fingerprint features"""
 
     central_atom: int
     radius: int
 
     def __new__(
         cls, central_atom: int, radius: int, environment_atoms: set[int]
-    ) -> CircularAtomEnvironment:
+    ) -> Self:
         self = super(CircularAtomEnvironment, cls).__new__(cls, environment_atoms)
         self.central_atom = central_atom
         self.radius = radius
@@ -242,7 +243,7 @@ class _MorganFingerprint(Fingerprint):
                     )
                     continue
                 env = Chem.FindAtomEnvironmentOfRadiusN(mol_obj, radius, central_atom)
-                amap: dict[int, int] = dict()
+                amap: dict[int, int] = {}
                 _ = Chem.PathToSubmol(mol_obj, env, atomMap=amap)
                 env_atoms = amap.keys()
                 assert central_atom in env_atoms
@@ -251,17 +252,19 @@ class _MorganFingerprint(Fingerprint):
                 )
 
         # Transforming default dict to dict
-        return {k: v for k, v in result_dict.items()}
+        return dict(result_dict.items())
 
 
 class FoldedMorganFingerprint(_MorganFingerprint):
+    """Class for calculating the folded (default) Moragn Fingerprint."""
+
     def __init__(
         self,
         n_bits: int = 2048,
         radius: int = 2,
         use_features: bool = False,
         n_jobs: int = 1,
-    ):
+    ) -> None:
         """Initialize fingerprint generation method for folded morgan fingerprint.
 
         Parameters
@@ -274,10 +277,6 @@ class FoldedMorganFingerprint(_MorganFingerprint):
             Encode Atoms based on their features.
         n_jobs:
             Number of cores to use.
-
-        Returns
-        -------
-        None
         """
         super().__init__(radius=radius, use_features=use_features, n_jobs=n_jobs)
         if isinstance(n_bits, int) and n_bits >= 0:
@@ -448,7 +447,7 @@ class UnfoldedMorganFingerprint(_MorganFingerprint):
             Value: list of matching environments.
                 Matching environments are given as tuple of central atom id and radius.
         """
-        bi: dict[int, list[tuple[int, int]]] = dict()
+        bi: dict[int, list[tuple[int, int]]] = {}
         _ = AllChem.GetMorganFingerprint(
             mol_obj, self.radius, useFeatures=self.use_features, bitInfo=bi
         )
@@ -565,7 +564,9 @@ class MACCS(Fingerprint):
         return r_matrix[:, 1:]
 
 
-class FragmentFingerprint(Fingerprint):
+class SubstructureFingerprint(Fingerprint):
+    """Fingerprint based on predefined substructures."""
+
     def __init__(self, substructure_list: list[str], n_jobs: int = 1) -> None:
         """Fingerprint from a list of substructures.
 

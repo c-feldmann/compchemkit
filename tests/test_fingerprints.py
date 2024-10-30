@@ -7,7 +7,7 @@ import pandas as pd
 from rdkit import Chem
 from scipy import sparse
 
-from compchemkit.fingerprints import FragmentFingerprint, UnfoldedMorganFingerprint
+from compchemkit.fingerprints import SubstructureFingerprint, UnfoldedMorganFingerprint
 from compchemkit.utils.molecule_validity import construct_check_mol_list
 
 test_folder = os.path.dirname(__file__)
@@ -61,7 +61,7 @@ class ConstructingFingerprints(unittest.TestCase):
         None
         """
         smarts_list = ["[#6]", "[#7]", "[#8]"]
-        frag_fingerprint = FragmentFingerprint(smarts_list)
+        frag_fingerprint = SubstructureFingerprint(smarts_list)
         fp = frag_fingerprint.transform(construct_check_mol_list(smiles_list))
 
         # Looped search
