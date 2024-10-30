@@ -81,7 +81,7 @@ def assign_prediction_importance(
 
 def get_similaritymap_from_weights(
     mol: Chem.Mol,
-    weights: Union[npt.NDArray[np.float_], list[float], tuple[float]],
+    weights: Union[npt.NDArray[np.float64], list[float], tuple[float]],
     draw2d: Draw.MolDraw2DCairo,
     sigma: Optional[float] = None,
     sigma_f: float = 0.3,
@@ -96,7 +96,7 @@ def get_similaritymap_from_weights(
     ----------
     mol: Chem.Mol
         The molecule of interest.
-    weights: Union[npt.NDArray[np.float_], list[float], tuple[float]]
+    weights: Union[npt.NDArray[np.float64], list[float], tuple[float]]
         Weight of each atom.
     draw2d: Draw.MolDraw2DCairo
         Canvas to draw onto.
